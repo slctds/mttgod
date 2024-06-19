@@ -11,9 +11,9 @@
         <div class="welcome-message">Добро пожаловать!</div>
         <div class="button-container">
             <button class="app-button" onclick="navigateTo('ranges')">Диапазоны</button>
-            <button class="app-button" onclick="navigateTo('equity')">Эквити</button>
-            <button class="app-button" onclick="navigateTo('combinatorics')">Комбинаторика</button>
-            <button class="app-button" onclick="navigateTo('knockouts')">Нокауты</button>
+            <button class="app-button disabled-button">Эквити</button>
+            <button class="app-button disabled-button">Комбинаторика</button>
+            <button class="app-button disabled-button">Нокауты</button>
         </div>
     </div>
 
@@ -51,8 +51,8 @@
         <div class="welcome-message">Тесты</div>
         <div class="button-container">
             <button class="app-button" onclick="navigateTo('testByImage')">По картинке</button>
-            <button class="app-button" onclick="navigateTo('testByNumber')">По числу</button>
-            <button class="app-button" onclick="navigateTo('testByHands')">По рукам</button>
+            <button class="app-button disabled-button">По числу</button>
+            <button class="app-button disabled-button">По рукам</button>
             <button class="app-button" onclick="navigateTo('ranges')">Назад</button>
         </div>
     </div>
@@ -81,7 +81,7 @@
         <div id="image-test">
             <img id="test-image" src="" alt="Тестовая картинка" />
             <div id="answer-buttons" class="answer-buttons"></div>
-            <div id="score">Правильных ответов: 0 | Неправильных ответов: 0</div>
+            <div id="score">Правильных: 0 | Неправильных: 0</div>
             <button class="app-button end-button" onclick="endTest()">End</button>
         </div>
         <button class="app-button back-button" onclick="navigateTo('test')">Назад</button>
