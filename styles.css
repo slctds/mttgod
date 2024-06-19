@@ -1,0 +1,247 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+}
+
+.container {
+    text-align: center;
+    width: 100%;
+    max-width: 600px;
+}
+
+.welcome-message {
+    font-size: 24px;
+    margin: 0;
+    padding: 20px 0;
+    height: 25vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: black;
+    background-color: #f0f0f0;
+}
+
+.button-container, .button-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    width: 100%;
+}
+
+.app-button {
+    font-size: 24px;
+    padding: 20px;
+    border: none;
+    width: 100%;
+    height: 100px;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    box-sizing: border-box;
+}
+
+.app-button:hover {
+    background-color: #45a049;
+}
+
+.button-grid {
+    display: grid;
+    gap: 10px;
+}
+
+.button-row {
+    display: flex;
+    justify-content: space-between;
+}
+
+.study-button {
+    font-size: 18px;
+    padding: 10px;
+    width: calc(25% - 10px); /* Четыре кнопки в ряд с небольшим отступом */
+    height: 70px; /* Увеличиваем высоту кнопок */
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.study-button:hover {
+    background-color: #45a049;
+}
+
+.study-instruction {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: black;
+}
+
+.back-button {
+    margin-top: 20px; /* Добавляем отступ сверху для кнопки "Назад" */
+}
+
+.end-button {
+    margin-top: 20px; /* Добавляем отступ сверху для кнопки "End" */
+}
+
+#image-viewer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none; /* Изначально скрываем */
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 1000; /* Убедитесь, что просмотрщик изображений выше других элементов */
+}
+
+#overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 1001; /* Убедитесь, что оверлей выше других элементов */
+}
+
+#displayed-image {
+    max-width: 90%;
+    max-height: 80%;
+    cursor: pointer;
+    z-index: 1002; /* Убедитесь, что изображение выше оверлея */
+}
+
+.image-name {
+    color: white;
+    font-size: 24px;
+    margin-bottom: 10px;
+    z-index: 1002; /* Убедитесь, что название изображения выше оверлея */
+}
+
+.switch-container {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.switch-label {
+    margin-right: 20px; /* Отступ справа для надписи */
+    min-width: 100px; /* Минимальная ширина для выравнивания */
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #4CAF50;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+/* Добавьте этот класс для деактивации кнопок */
+button.disabled {
+    pointer-events: none;
+    opacity: 0.6; /* Вы можете изменить это значение для визуального эффекта */
+}
+
+#image-test img {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 20px;
+}
+
+.answer-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.answer-buttons button {
+    padding: 10px;
+    font-size: 18px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.answer-buttons button.correct {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.answer-buttons button.incorrect {
+    background-color: #f44336;
+    color: white;
+}
+
+#score {
+    margin-top: 20px;
+    font-size: 18px;
+    color: black;
+}
+
+.answer-buttons button {
+    padding: 10px;
+    font-size: 18px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    background-color: #2196F3;
+    color: white;
+}
+
+.answer-buttons button.correct {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.answer-buttons button.incorrect {
+    background-color: #f44336;
+    color: white;
+}

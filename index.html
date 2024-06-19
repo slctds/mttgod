@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Mini-App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container" id="main-menu">
+        <div class="welcome-message">Добро пожаловать!</div>
+        <div class="button-container">
+            <button class="app-button" onclick="navigateTo('ranges')">Диапазоны</button>
+            <button class="app-button" onclick="navigateTo('equity')">Эквити</button>
+            <button class="app-button" onclick="navigateTo('combinatorics')">Комбинаторика</button>
+            <button class="app-button" onclick="navigateTo('knockouts')">Нокауты</button>
+        </div>
+    </div>
+
+    <div class="container" id="ranges-menu" style="display: none;">
+        <div class="welcome-message">Диапазоны</div>
+        <div class="button-container">
+            <button class="app-button" onclick="navigateTo('study')">Изучить</button>
+            <button class="app-button" onclick="navigateTo('test')">Тест</button>
+            <button class="app-button" onclick="navigateTo('main')">Назад</button>
+        </div>
+    </div>
+
+    <div class="container" id="study-menu" style="display: none;">
+        <div class="welcome-message">Изучить</div>
+        <div class="button-container">
+            <button class="app-button" onclick="navigateTo('basic')">Основные</button>
+            <button class="app-button" onclick="navigateTo('boundaries')">Границы</button>
+            <button class="app-button" onclick="navigateTo('ranges')">Назад</button>
+        </div>
+    </div>
+
+    <div class="container" id="basic-menu" style="display: none;">
+        <div class="study-instruction">Нажмите на кнопку диапазона, чтобы посмотреть его</div>
+        <div class="button-grid" id="basic-grid"></div>
+        <button class="app-button back-button" onclick="navigateTo('study')">Назад</button>
+    </div>
+
+    <div class="container" id="boundaries-menu" style="display: none;">
+        <div class="study-instruction">Нажмите на кнопку диапазона, чтобы посмотреть его</div>
+        <div class="button-grid" id="boundaries-grid"></div>
+        <button class="app-button back-button" onclick="navigateTo('study')">Назад</button>
+    </div>
+
+    <div class="container" id="test-menu" style="display: none;">
+        <div class="welcome-message">Тесты</div>
+        <div class="button-container">
+            <button class="app-button" onclick="navigateTo('testByImage')">По картинке</button>
+            <button class="app-button" onclick="navigateTo('testByNumber')">По числу</button>
+            <button class="app-button" onclick="navigateTo('testByHands')">По рукам</button>
+            <button class="app-button" onclick="navigateTo('ranges')">Назад</button>
+        </div>
+    </div>
+
+    <div class="container" id="test-by-image-menu" style="display: none;">
+        <div class="welcome-message">Начинаем тест. Выберите, с какими диапазонами будем работать?</div>
+        <div class="switch-container">
+            <span class="switch-label">Основные</span>
+            <label class="switch">
+                <input type="checkbox" id="basic-switch">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div class="switch-container">
+            <span class="switch-label">Границы</span>
+            <label class="switch">
+                <input type="checkbox" id="boundaries-switch">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <button class="app-button back-button" onclick="startTest()">Начать тест</button>
+        <button class="app-button back-button" onclick="navigateTo('test')">Назад</button>
+    </div>
+
+    <div class="container" id="image-test-menu" style="display: none;">
+        <div id="image-test">
+            <img id="test-image" src="" alt="Тестовая картинка" />
+            <div id="answer-buttons" class="answer-buttons"></div>
+            <div id="score">Правильных ответов: 0 | Неправильных ответов: 0</div>
+            <button class="app-button end-button" onclick="endTest()">End</button>
+        </div>
+        <button class="app-button back-button" onclick="navigateTo('test')">Назад</button>
+    </div>
+
+    <div id="image-viewer" style="display: none;">
+        <div id="overlay" onclick="closeImage()"></div>
+        <div id="image-name" class="image-name"></div>
+        <img id="displayed-image" src="" alt="Диапазон">
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
