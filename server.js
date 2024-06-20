@@ -2,9 +2,17 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
+const https = require('https');
 
 const app = express();
 const port = 3000;
+const sslPort = 3443;
+
+const options = {
+    key: fs.readFileSync('/etc/letsencrypt/live/pokertest.online/privkey.pem'),
+    cert: fs.readFileSync('/etc/letsencrypt/live/pokertest.online/fullchain.pem')
+};
 
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -22,6 +30,10 @@ app.get('/api/images', (req, res) => {
     });
 });
 
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+http.createServer(app).listen(port, () => {
+    console.log(`HTTP Server running at http://localhost:${port}`);
+});
+
+https.createServer(options, app).listen(sslPort, () => {
+    console.log(`HTTPS Server running at https://localhost:${sslPort}`);
 });

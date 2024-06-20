@@ -3,9 +3,10 @@ let currentImageList = [];
 let correctAnswers = 0;
 let incorrectAnswers = 0;
 
-// Используйте IP-адрес вашего компьютера и порт 3000 для API-запросов
-const YOUR_COMPUTER_IP = '212.86.115.132';
-const SERVER_PORT = 3000;
+// Определяем текущий протокол и домен
+const protocol = window.location.protocol;
+const host = window.location.hostname;
+const port = protocol === 'https:' ? 3443 : 3000; // Если HTTPS, используем порт 3443, иначе 3000
 
 function navigateTo(page) {
     console.log(`Navigating to ${page}`);
@@ -69,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function loadButtons(gridId, type) {
     console.log(`Loading buttons for ${type}`);
-    fetch(`http://${YOUR_COMPUTER_IP}:${SERVER_PORT}/api/images`) // Используйте IP-адрес вашего компьютера
+    fetch(`${protocol}//${host}:${port}/api/images`)
         .then(response => response.json())
         .then(files => {
             if (!Array.isArray(files)) {
@@ -176,7 +177,7 @@ function enableButtons() {
 }
 
 function startTest() {
-    fetch(`http://${YOUR_COMPUTER_IP}:${SERVER_PORT}/api/images`) // Используйте IP-адрес вашего компьютера
+    fetch(`${protocol}//${host}:${port}/api/images`)
         .then(response => response.json())
         .then(files => {
             if (!Array.isArray(files)) {
