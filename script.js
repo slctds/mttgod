@@ -4,7 +4,7 @@ let correctAnswers = 0;
 let incorrectAnswers = 0;
 
 // Используйте IP-адрес вашего компьютера и порт 3000 для API-запросов
-const YOUR_COMPUTER_IP = '192.168.100.101';
+const YOUR_COMPUTER_IP = '212.86.115.132';
 const SERVER_PORT = 3000;
 
 function navigateTo(page) {
