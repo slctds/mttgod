@@ -40,6 +40,10 @@ function navigateTo(page) {
         console.log('Test by Hands');
     } else if (page === 'imageTest') {
         document.getElementById('image-test-menu').style.display = 'block';
+    } else if (page === 'equity') {
+        document.getElementById('equity-menu').style.display = 'block';
+    } else if (page === 'equity-study') {
+        document.getElementById('equity-study-menu').style.display = 'block';
     }
 }
 

@@ -11,7 +11,7 @@
         <div class="welcome-message">Добро пожаловать!</div>
         <div class="button-container">
             <button class="app-button" onclick="navigateTo('ranges')">Диапазоны</button>
-            <button class="app-button disabled-button">Эквити</button>
+            <button class="app-button" onclick="navigateTo('equity')">Эквити</button>
             <button class="app-button disabled-button">Комбинаторика</button>
             <button class="app-button disabled-button">Нокауты</button>
         </div>
@@ -85,6 +85,25 @@
             <button class="app-button end-button" onclick="endTest()">End</button>
         </div>
         <button class="app-button back-button" onclick="navigateTo('test')">Назад</button>
+    </div>
+
+    <div class="container" id="equity-menu" style="display: none;">
+        <div class="welcome-message">Эквити</div>
+        <div class="button-container">
+            <button class="app-button" onclick="navigateTo('equity-study')">Изучить</button>
+            <button class="app-button disabled-button">Тест</button>
+            <button class="app-button" onclick="navigateTo('main')">Назад</button>
+        </div>
+    </div>
+
+    <div class="container" id="equity-study-menu" style="display: none;">
+        <div class="welcome-message">Изучение Эквити</div>
+        <div class="button-container">
+            <button class="app-button disabled-button">vs Any</button>
+            <button class="app-button disabled-button">vs 10%</button>
+            <button class="app-button disabled-button">vs 10% & 7%</button>
+            <button class="app-button" onclick="navigateTo('equity')">Назад</button>
+        </div>
     </div>
 
     <div id="image-viewer" style="display: none;">
