@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Telegram Mini-App</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css"> <!-- Подключение файла стилей -->
 </head>
 <body>
     <div class="container" id="main-menu">
@@ -98,12 +98,14 @@
 
     <div class="container" id="equity-study-menu" style="display: none;">
         <div class="welcome-message">Изучение Эквити</div>
-        <div class="button-container">
-            <button class="app-button disabled-button">vs Any</button>
-            <button class="app-button disabled-button">vs 10%</button>
-            <button class="app-button disabled-button">vs 10% & 7%</button>
-            <button class="app-button" onclick="navigateTo('equity')">Назад</button>
-        </div>
+        <div class="button-grid" id="equity-grid"></div>
+        <button class="app-button back-button" onclick="navigateTo('equity')">Назад</button>
+    </div>
+
+    <div class="container" id="ranges-study-menu" style="display: none;">
+        <div class="study-instruction">Нажмите на кнопку диапазона, чтобы посмотреть его</div>
+        <div class="button-grid" id="ranges-grid"></div>
+        <button class="app-button back-button" onclick="navigateTo('ranges')">Назад</button>
     </div>
 
     <div id="image-viewer" style="display: none;">

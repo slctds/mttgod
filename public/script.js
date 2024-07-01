@@ -18,6 +18,7 @@ function navigateTo(page) {
     // Показываем выбранный контейнер
     if (page === 'ranges') {
         document.getElementById('ranges-menu').style.display = 'block';
+        loadButtons('ranges-grid', 'ranges');
     } else if (page === 'main') {
         document.getElementById('main-menu').style.display = 'block';
     } else if (page === 'study') {
@@ -33,10 +34,8 @@ function navigateTo(page) {
     } else if (page === 'testByImage') {
         document.getElementById('test-by-image-menu').style.display = 'block';
     } else if (page === 'testByNumber') {
-        // Логика для теста по числу
         console.log('Test by Number');
     } else if (page === 'testByHands') {
-        // Логика для теста по рукам
         console.log('Test by Hands');
     } else if (page === 'imageTest') {
         document.getElementById('image-test-menu').style.display = 'block';
@@ -44,15 +43,14 @@ function navigateTo(page) {
         document.getElementById('equity-menu').style.display = 'block';
     } else if (page === 'equity-study') {
         document.getElementById('equity-study-menu').style.display = 'block';
+        loadEquityButtons();
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM fully loaded and parsed');
-    // Устанавливаем отображение главного меню при загрузке страницы
     document.getElementById('main-menu').style.display = 'block';
 
-    // Добавляем обработчики событий для свайпа
     const imageViewer = document.getElementById('image-viewer');
     let startX = 0;
 
@@ -84,42 +82,63 @@ function loadButtons(gridId, type) {
 
             let filteredFiles;
             if (type === 'basic') {
-                // Фильтрация файлов с именами, содержащими ровно два символа
                 filteredFiles = files.filter(file => file.split('.')[0].length === 2);
             } else if (type === 'boundaries') {
-                // Фильтрация файлов с именами, содержащими больше двух символов
                 filteredFiles = files.filter(file => file.split('.')[0].length > 2);
+            } else if (type === 'ranges') {
+                filteredFiles = files;
             }
 
             currentImageList = filteredFiles;
             const buttonGrid = document.getElementById(gridId);
-            buttonGrid.innerHTML = ''; // Очищаем предыдущие кнопки
-            const buttonsPerRow = 4; // Количество кнопок в одном ряду
+            buttonGrid.innerHTML = '';
 
-            for (let i = 0; i < Math.ceil(filteredFiles.length / buttonsPerRow); i++) {
-                const row = document.createElement('div');
-                row.className = 'button-row';
-
-                for (let j = 0; j < buttonsPerRow && (i * buttonsPerRow + j) < filteredFiles.length; j++) {
-                    const button = document.createElement('button');
-                    button.className = 'study-button';
-                    button.textContent = filteredFiles[i * buttonsPerRow + j].split('.')[0];
-                    button.addEventListener('click', () => {
-                        console.log(`Button clicked: ${button.textContent}`);
-                        displayImage(i * buttonsPerRow + j);
-                    });
-                    row.appendChild(button);
-                }
-
-                buttonGrid.appendChild(row);
-            }
+            filteredFiles.forEach((file, index) => {
+                const button = document.createElement('button');
+                button.className = 'range-button'; // Исправлено на range-button
+                button.textContent = file.split('.')[0];
+                button.addEventListener('click', () => {
+                    console.log(`Button clicked: ${button.textContent}`);
+                    displayImage(index, currentImageList, '50bb');
+                });
+                buttonGrid.appendChild(button);
+            });
         })
         .catch(error => console.error('Error loading images:', error));
 }
 
-function displayImage(index) {
+function loadEquityButtons() {
+    fetch(`${protocol}//${host}:${port}/api/eq-images`)
+        .then(response => response.json())
+        .then(files => {
+            currentImageList = files; // Добавим это для использования в displayImage
+            const equityGrid = document.getElementById('equity-grid');
+            equityGrid.innerHTML = '';
+
+            files.forEach((file, index) => {
+                const button = document.createElement('button');
+                button.className = 'equity-button';
+                const fileName = file.split('.')[0];
+                if (fileName.includes('-')) {
+                    const [X, Y] = fileName.split('-');
+                    button.textContent = `vs ${X} & ${Y}`;
+                } else {
+                    button.textContent = `vs ${fileName}`;
+                }
+                button.addEventListener('click', () => {
+                    console.log(`Button clicked: ${button.textContent}`);
+                    displayImage(index, currentImageList, 'eq');
+                });
+                equityGrid.appendChild(button);
+            });
+        })
+        .catch(error => console.error('Error loading equity images:', error));
+}
+
+function displayImage(index, imageList, folder) {
     console.log(`Displaying image at index ${index}`);
     currentImageIndex = index;
+    currentImageList = imageList;
     const imageViewer = document.getElementById('image-viewer');
     const overlay = document.getElementById('overlay');
     const displayedImage = document.getElementById('displayed-image');
@@ -130,11 +149,11 @@ function displayImage(index) {
         return;
     }
     const imageNameWithoutExtension = imageFileName.split('.')[0];
-    displayedImage.src = `50bb/${imageFileName}`;
+    displayedImage.src = `${folder}/${imageFileName}`;
     imageName.textContent = imageNameWithoutExtension;
     imageViewer.style.display = 'flex';
-    overlay.style.display = 'block'; // Показываем оверлей
-    disableButtons(); // Деактивируем кнопки
+    overlay.style.display = 'block';
+    disableButtons();
 }
 
 function closeImage() {
@@ -144,24 +163,23 @@ function closeImage() {
     imageViewer.style.display = 'none';
     const displayedImage = document.getElementById('displayed-image');
     displayedImage.src = '';
-    overlay.style.display = 'none'; // Скрываем оверлей
+    overlay.style.display = 'none';
 
-    // Добавляем задержку перед включением кнопок
     setTimeout(() => {
-        enableButtons(); // Активируем кнопки
+        enableButtons();
     }, 500);
 }
 
 function showNextImage() {
     console.log('Showing next image');
     currentImageIndex = (currentImageIndex + 1) % currentImageList.length;
-    displayImage(currentImageIndex);
+    displayImage(currentImageIndex, currentImageList, '50bb');
 }
 
 function showPreviousImage() {
     console.log('Showing previous image');
     currentImageIndex = (currentImageIndex - 1 + currentImageList.length) % currentImageList.length;
-    displayImage(currentImageIndex);
+    displayImage(currentImageIndex, currentImageList, '50bb');
 }
 
 function disableButtons() {
@@ -194,23 +212,17 @@ function startTest() {
             const boundariesSwitch = document.getElementById('boundaries-switch').checked;
             let imagesToUse = [];
 
-            console.log('Files:', files); // Добавим логирование файлов
+            console.log('Files:', files);
 
             if (basicSwitch && boundariesSwitch) {
-                imagesToUse = currentImageList; // Используем все изображения
+                imagesToUse = currentImageList;
             } else if (basicSwitch) {
-                imagesToUse = currentImageList.filter(file => {
-                    console.log('Checking basic file:', file);
-                    return file.split('.')[0].length === 2;
-                }); // Фильтруем основные изображения
+                imagesToUse = currentImageList.filter(file => file.split('.')[0].length === 2);
             } else if (boundariesSwitch) {
-                imagesToUse = currentImageList.filter(file => {
-                    console.log('Checking boundaries file:', file);
-                    return file.split('.')[0].length > 2;
-                }); // Фильтруем границы
+                imagesToUse = currentImageList.filter(file => file.split('.')[0].length > 2);
             }
 
-            console.log('Images to use:', imagesToUse); // Добавим логирование выбранных файлов
+            console.log('Images to use:', imagesToUse);
 
             if (imagesToUse.length === 0) {
                 alert('Нет доступных изображений для выбранных настроек.');

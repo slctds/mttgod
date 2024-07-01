@@ -1,3 +1,4 @@
+/* Основной стиль для всего документа */
 body {
     margin: 0;
     font-family: Arial, sans-serif;
@@ -8,12 +9,14 @@ body {
     background-color: #f0f0f0;
 }
 
+/* Стиль для контейнеров */
 .container {
     text-align: center;
     width: 100%;
-    max-width: 600px;
+    max-width: 800px;
 }
 
+/* Стиль для приветственного сообщения */
 .welcome-message {
     font-size: 24px;
     margin: 0;
@@ -26,13 +29,14 @@ body {
     background-color: #f0f0f0;
 }
 
+/* Контейнер для кнопок и сетка для кнопок */
 .button-container, .button-grid {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 20px;
-    width: 100%;
+    gap: 10px; /* Расстояние между кнопками */
+    width: 90%;
 }
 
+/* Основной стиль для кнопок */
 .app-button {
     font-size: 24px;
     padding: 20px;
@@ -46,62 +50,84 @@ body {
     box-sizing: border-box;
 }
 
+/* Стиль для кнопок при наведении */
 .app-button:hover {
     background-color: #45a049;
 }
 
+/* Сетка для кнопок, 4 столбца */
 .button-grid {
     display: grid;
-    gap: 10px;
+    grid-gap: 10px;
+    grid-template-columns: repeat(4, 1fr); /* 4 кнопки в ряду */
 }
 
-.button-row {
-    display: flex;
-    justify-content: space-between;
-}
-
-.study-button {
-    font-size: 18px;
-    padding: 10px;
-    width: calc(25% - 10px); /* Четыре кнопки в ряд с небольшим отступом */
-    height: 70px; /* Увеличиваем высоту кнопок */
-    background-color: #4CAF50;
+/* Стиль для кнопок диапазонов */
+.range-button {
+    font-size: 12px;
+    padding: 20px;
+    background-color: #ff7043; /* Оранжевый цвет */
     color: white;
     border: none;
     cursor: pointer;
     transition: background-color 0.3s;
+    box-sizing: border-box;
+    height: auto;
 }
 
-.study-button:hover {
-    background-color: #45a049;
+/* Стиль для кнопок диапазонов при наведении */
+.range-button:hover {
+    background-color: #ff5722;
 }
 
+/* Стиль для кнопок эквити */
+.equity-button {
+    font-size: 12px;
+    padding: 20px;
+    background-color: #2196F3; /* Синий цвет */
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    box-sizing: border-box;
+    height: auto;
+}
+
+/* Стиль для кнопок эквити при наведении */
+.equity-button:hover {
+    background-color: #1976D2;
+}
+
+/* Инструкция для изучения */
 .study-instruction {
     font-size: 18px;
     margin-bottom: 10px;
     color: black;
 }
 
+/* Стиль для кнопки назад */
 .back-button {
-    margin-top: 20px; /* Добавляем отступ сверху для кнопки "Назад" */
+    margin-top: 20px;
 }
 
+/* Стиль для кнопки завершения */
 .end-button {
-    margin-top: 20px; /* Добавляем отступ сверху для кнопки "End" */
+    margin-top: 20px;
 }
 
+/* Стили для просмотра изображений */
 #image-viewer {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    display: none; /* Изначально скрываем */
+    display: none;
     justify-content: center;
     align-items: center;
     flex-direction: column;
     background-color: rgba(0, 0, 0, 0.8);
-    z-index: 1000; /* Убедитесь, что просмотрщик изображений выше других элементов */
+    z-index: 1000;
 }
 
 #overlay {
@@ -111,23 +137,24 @@ body {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.8);
-    z-index: 1001; /* Убедитесь, что оверлей выше других элементов */
+    z-index: 1001;
 }
 
 #displayed-image {
     max-width: 90%;
     max-height: 80%;
     cursor: pointer;
-    z-index: 1002; /* Убедитесь, что изображение выше оверлея */
+    z-index: 1002;
 }
 
 .image-name {
     color: white;
     font-size: 24px;
     margin-bottom: 10px;
-    z-index: 1002; /* Убедитесь, что название изображения выше оверлея */
+    z-index: 1002;
 }
 
+/* Стили для переключателей */
 .switch-container {
     display: flex;
     align-items: center;
@@ -135,8 +162,8 @@ body {
 }
 
 .switch-label {
-    margin-right: 20px; /* Отступ справа для надписи */
-    min-width: 100px; /* Минимальная ширина для выравнивания */
+    margin-right: 20px;
+    min-width: 100px;
 }
 
 .switch {
@@ -184,12 +211,13 @@ input:checked + .slider:before {
     transform: translateX(26px);
 }
 
-/* Добавьте этот класс для деактивации кнопок */
+/* Стиль для отключенных кнопок */
 button.disabled {
     pointer-events: none;
-    opacity: 0.6; /* Вы можете изменить это значение для визуального эффекта */
+    opacity: 0.6;
 }
 
+/* Стили для тестов с изображениями */
 #image-test img {
     max-width: 100%;
     height: auto;
@@ -246,7 +274,7 @@ button.disabled {
     color: white;
 }
 
-/* Стили для тусклых кнопок */
+/* Стиль для отключенных кнопок */
 .disabled-button {
     background-color: #d3d3d3;
     color: #6c757d;
@@ -255,7 +283,6 @@ button.disabled {
     pointer-events: none;
 }
 
-/* Стили для надписи "soon" */
 .disabled-button::after {
     content: "soon";
     position: absolute;

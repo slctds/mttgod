@@ -20,7 +20,17 @@ app.get('/', (req, res) => {
 });
 
 app.get('/api/images', (req, res) => {
-    const imagesDirectory = path.join(__dirname, 'public/50bb');
+    const imagesDirectory = path.join(__dirname, 'public', '50bb');
+    fs.readdir(imagesDirectory, (err, files) => {
+        if (err) {
+            return res.status(500).json({ error: 'Failed to read directory' });
+        }
+        res.json(files);
+    });
+});
+
+app.get('/api/eq-images', (req, res) => {
+    const imagesDirectory = path.join(__dirname, 'public', 'eq');
     fs.readdir(imagesDirectory, (err, files) => {
         if (err) {
             return res.status(500).json({ error: 'Failed to read directory' });
