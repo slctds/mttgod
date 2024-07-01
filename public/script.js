@@ -1,5 +1,6 @@
 let currentImageIndex = 0;
 let currentImageList = [];
+let currentFolder = ''; // Добавляем переменную для хранения текущей папки
 let correctAnswers = 0;
 let incorrectAnswers = 0;
 
@@ -18,6 +19,7 @@ function navigateTo(page) {
     // Показываем выбранный контейнер
     if (page === 'ranges') {
         document.getElementById('ranges-menu').style.display = 'block';
+        currentFolder = '50bb';
         loadButtons('ranges-grid', 'ranges');
     } else if (page === 'main') {
         document.getElementById('main-menu').style.display = 'block';
@@ -25,9 +27,11 @@ function navigateTo(page) {
         document.getElementById('study-menu').style.display = 'block';
     } else if (page === 'basic') {
         document.getElementById('basic-menu').style.display = 'block';
+        currentFolder = '50bb';
         loadButtons('basic-grid', 'basic');
     } else if (page === 'boundaries') {
         document.getElementById('boundaries-menu').style.display = 'block';
+        currentFolder = '50bb';
         loadButtons('boundaries-grid', 'boundaries');
     } else if (page === 'test') {
         document.getElementById('test-menu').style.display = 'block';
@@ -43,6 +47,7 @@ function navigateTo(page) {
         document.getElementById('equity-menu').style.display = 'block';
     } else if (page === 'equity-study') {
         document.getElementById('equity-study-menu').style.display = 'block';
+        currentFolder = 'eq';
         loadEquityButtons();
     }
 }
@@ -99,7 +104,7 @@ function loadButtons(gridId, type) {
                 button.textContent = file.split('.')[0];
                 button.addEventListener('click', () => {
                     console.log(`Button clicked: ${button.textContent}`);
-                    displayImage(index, currentImageList, '50bb');
+                    displayImage(index, currentImageList, currentFolder);
                 });
                 buttonGrid.appendChild(button);
             });
@@ -139,6 +144,7 @@ function displayImage(index, imageList, folder) {
     console.log(`Displaying image at index ${index}`);
     currentImageIndex = index;
     currentImageList = imageList;
+    currentFolder = folder;
     const imageViewer = document.getElementById('image-viewer');
     const overlay = document.getElementById('overlay');
     const displayedImage = document.getElementById('displayed-image');
@@ -173,13 +179,13 @@ function closeImage() {
 function showNextImage() {
     console.log('Showing next image');
     currentImageIndex = (currentImageIndex + 1) % currentImageList.length;
-    displayImage(currentImageIndex, currentImageList, '50bb');
+    displayImage(currentImageIndex, currentImageList, currentFolder);
 }
 
 function showPreviousImage() {
     console.log('Showing previous image');
     currentImageIndex = (currentImageIndex - 1 + currentImageList.length) % currentImageList.length;
-    displayImage(currentImageIndex, currentImageList, '50bb');
+    displayImage(currentImageIndex, currentImageList, currentFolder);
 }
 
 function disableButtons() {
