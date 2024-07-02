@@ -7,14 +7,13 @@ const http = require('http');
 const https = require('https');
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;  // Используем порт 3001
 const sslPort = process.env.SSL_PORT || 3443;
 const useSsl = process.env.USE_SSL === 'true';
 
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Обработчик для корневого URL
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -39,17 +38,18 @@ app.get('/api/eq-images', (req, res) => {
     });
 });
 
+http.createServer(app).listen(port, () => {
+    console.log(`HTTP Server running at http://localhost:${port}`);
+});
+
 if (useSsl) {
     const options = {
-        key: fs.readFileSync(process.env.SSL_KEY_PATH || 'path/to/your/ssl/key.pem'),
-        cert: fs.readFileSync(process.env.SSL_CERT_PATH || 'path/to/your/ssl/cert.pem')
+        key: fs.readFileSync(process.env.SSL_KEY_PATH),
+        cert: fs.readFileSync(process.env.SSL_CERT_PATH)
     };
 
     https.createServer(options, app).listen(sslPort, () => {
         console.log(`HTTPS Server running at https://localhost:${sslPort}`);
     });
-} else {
-    http.createServer(app).listen(port, () => {
-        console.log(`HTTP Server running at http://localhost:${port}`);
-    });
 }
+
