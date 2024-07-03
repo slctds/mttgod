@@ -16,23 +16,91 @@ body {
     max-width: 800px;
 }
 
-/* Стиль для приветственного сообщения */
-.welcome-message {
-    font-size: 24px;
-    margin: 0;
-    padding: 20px 0;
-    height: 25vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: black;
-    background-color: #f0f0f0;
+/* Стиль для кнопки Login */
+.login-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s;
 }
 
-/* Контейнер для кнопок и сетка для кнопок */
+.login-button:hover {
+    background-color: #45a049;
+}
+
+/* Стили для модального окна */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 300px;
+    text-align: center;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+}
+
+.modal-content input[type="text"], .modal-content input[type="password"] {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin: 5px 0;
+    display: block;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+.modal-content button {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: none;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.modal-content button:hover {
+    background-color: #45a049;
+}
+
+/* Стили для кнопок */
 .button-container, .button-grid {
     display: grid;
-    gap: 10px; /* Расстояние между кнопками */
+    gap: 10px;
     width: 90%;
 }
 
@@ -63,7 +131,7 @@ body {
 }
 
 /* Стиль для кнопок диапазонов */
-.range-button {
+.range-button, .study-button, .equity-button {
     font-size: 12px;
     padding: 20px;
     background-color: #ff7043; /* Оранжевый цвет */
@@ -76,26 +144,8 @@ body {
 }
 
 /* Стиль для кнопок диапазонов при наведении */
-.range-button:hover {
+.range-button:hover, .study-button:hover, .equity-button:hover {
     background-color: #ff5722;
-}
-
-/* Стиль для кнопок эквити */
-.equity-button {
-    font-size: 12px;
-    padding: 20px;
-    background-color: #2196F3; /* Синий цвет */
-    color: white;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    box-sizing: border-box;
-    height: auto;
-}
-
-/* Стиль для кнопок эквити при наведении */
-.equity-button:hover {
-    background-color: #1976D2;
 }
 
 /* Инструкция для изучения */
