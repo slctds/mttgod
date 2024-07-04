@@ -1,60 +1,15 @@
-let currentImageIndex = 0;
-let currentImageList = [];
+let currentUser = null;
 let correctAnswers = 0;
 let incorrectAnswers = 0;
-let isAuthenticated = false; // Флаг для отслеживания состояния авторизации
-
-// Определяем текущий протокол и домен
 const protocol = window.location.protocol;
 const host = window.location.hostname;
-const port = protocol === 'https:' ? 3443 : 3001; // Если HTTPS, используем порт 3443, иначе 3000
-
-function navigateTo(page) {
-    if (!isAuthenticated && page !== 'main') return; // Блокировать навигацию, если пользователь не авторизован
-
-    console.log(`Navigating to ${page}`);
-    // Скрываем все контейнеры
-    document.querySelectorAll('.container').forEach(container => {
-        container.style.display = 'none';
-    });
-
-    // Показываем выбранный контейнер
-    if (page === 'ranges') {
-        document.getElementById('ranges-menu').style.display = 'block';
-        loadButtons('ranges-grid', 'ranges');
-    } else if (page === 'main') {
-        document.getElementById('main-menu').style.display = 'block';
-    } else if (page === 'study') {
-        document.getElementById('study-menu').style.display = 'block';
-    } else if (page === 'basic') {
-        document.getElementById('basic-menu').style.display = 'block';
-        loadButtons('basic-grid', 'basic');
-    } else if (page === 'boundaries') {
-        document.getElementById('boundaries-menu').style.display = 'block';
-        loadButtons('boundaries-grid', 'boundaries');
-    } else if (page === 'test') {
-        document.getElementById('test-menu').style.display = 'block';
-    } else if (page === 'testByImage') {
-        document.getElementById('test-by-image-menu').style.display = 'block';
-    } else if (page === 'testByNumber') {
-        console.log('Test by Number');
-    } else if (page === 'testByHands') {
-        console.log('Test by Hands');
-    } else if (page === 'imageTest') {
-        document.getElementById('image-test-menu').style.display = 'block';
-    } else if (page === 'equity') {
-        document.getElementById('equity-menu').style.display = 'block';
-    } else if (page === 'equity-study') {
-        document.getElementById('equity-study-menu').style.display = 'block';
-        loadEquityButtons();
-    }
-}
+const port = window.location.port;
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM fully loaded and parsed');
     document.getElementById('main-menu').style.display = 'block';
 
-    disableButtons(); // Деактивировать кнопки при загрузке страницы
+    disableButtons();
 
     const imageViewer = document.getElementById('image-viewer');
     let startX = 0;
@@ -75,11 +30,63 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-function loadButtons(gridId, type) {
-    console.log(`Loading buttons for ${type}`);
+function navigateTo(page) {
+    if (!isAuthenticated && page !== 'main') return;
+
+    console.log(`Navigating to ${page}`);
+    document.querySelectorAll('.container').forEach(container => {
+        container.style.display = 'none';
+    });
+
+    if (page === 'ranges') {
+        currentImageType = 'ranges';
+        document.getElementById('ranges-menu').style.display = 'block';
+        loadDiapButtons('ranges-grid', 'all');
+    } else if (page === 'main') {
+        document.getElementById('main-menu').style.display = 'block';
+        if (isAuthenticated) {
+            document.getElementById('stats-button').style.display = 'block';
+        }
+    } else if (page === 'stats') {
+        document.getElementById('stats-menu').style.display = 'block';
+        loadStats();
+    } else if (page === 'study') {
+        document.getElementById('study-menu').style.display = 'block';
+    } else if (page === 'basic') {
+        currentImageType = 'ranges';
+        document.getElementById('basic-menu').style.display = 'block';
+        loadDiapButtons('basic-grid', 'basic');
+    } else if (page === 'boundaries') {
+        currentImageType = 'ranges';
+        document.getElementById('boundaries-menu').style.display = 'block';
+        loadDiapButtons('boundaries-grid', 'boundaries');
+    } else if (page === 'test') {
+        document.getElementById('test-menu').style.display = 'block';
+    } else if (page === 'testByImage') {
+        document.getElementById('test-by-image-menu').style.display = 'block';
+    } else if (page === 'testByNumber') {
+        console.log('Test by Number');
+    } else if (page === 'testByHands') {
+        console.log('Test by Hands');
+    } else if (page === 'imageTest') {
+        document.getElementById('image-test-menu').style.display = 'block';
+    } else if (page === 'equity') {
+        currentImageType = 'equity';
+        document.getElementById('equity-menu').style.display = 'block';
+        loadEquityButtons('equity-grid');
+    } else if (page === 'equity-study') {
+        currentImageType = 'equity';
+        document.getElementById('equity-study-menu').style.display = 'block';
+        loadEquityButtons('equity-grid');
+    }
+}
+
+function loadDiapButtons(gridId, type) {
+    console.log(`Loading diap buttons for ${type}`);
     fetch(`${protocol}//${host}:${port}/api/images`)
         .then(response => response.json())
         .then(files => {
+            console.log('Files received from server for diap:', files);
             if (!Array.isArray(files)) {
                 console.error('Expected an array of files');
                 return;
@@ -90,7 +97,7 @@ function loadButtons(gridId, type) {
                 filteredFiles = files.filter(file => file.split('.')[0].length === 2);
             } else if (type === 'boundaries') {
                 filteredFiles = files.filter(file => file.split('.')[0].length > 2);
-            } else if (type === 'ranges') {
+            } else {
                 filteredFiles = files;
             }
 
@@ -100,7 +107,7 @@ function loadButtons(gridId, type) {
 
             filteredFiles.forEach((file, index) => {
                 const button = document.createElement('button');
-                button.className = type === 'ranges' ? 'range-button' : 'study-button';
+                button.className = 'range-button';
                 button.textContent = file.split('.')[0];
                 button.addEventListener('click', () => {
                     console.log(`Button clicked: ${button.textContent}`);
@@ -112,28 +119,30 @@ function loadButtons(gridId, type) {
         .catch(error => console.error('Error loading images:', error));
 }
 
-function loadEquityButtons() {
+function loadEquityButtons(gridId) {
+    console.log('Loading equity buttons');
     fetch(`${protocol}//${host}:${port}/api/eq-images`)
         .then(response => response.json())
         .then(files => {
-            const equityGrid = document.getElementById('equity-grid');
-            equityGrid.innerHTML = '';
+            console.log('Equity files received from server:', files);
+            if (!Array.isArray(files)) {
+                console.error('Expected an array of files');
+                return;
+            }
 
-            files.forEach(file => {
+            currentImageList = files;
+            const buttonGrid = document.getElementById(gridId);
+            buttonGrid.innerHTML = '';
+
+            files.forEach((file, index) => {
                 const button = document.createElement('button');
                 button.className = 'equity-button';
-                const fileName = file.split('.')[0];
-                if (fileName.includes('-')) {
-                    const [X, Y] = fileName.split('-');
-                    button.textContent = `vs ${X} & ${Y}`;
-                } else {
-                    button.textContent = `vs ${fileName}`;
-                }
+                button.textContent = file.split('.')[0];
                 button.addEventListener('click', () => {
                     console.log(`Button clicked: ${button.textContent}`);
-                    displayEquityImage(fileName);
+                    displayImage(index);
                 });
-                equityGrid.appendChild(button);
+                buttonGrid.appendChild(button);
             });
         })
         .catch(error => console.error('Error loading equity images:', error));
@@ -147,26 +156,11 @@ function displayImage(index) {
     const displayedImage = document.getElementById('displayed-image');
     const imageName = document.getElementById('image-name');
     const imageFileName = currentImageList[index];
-    if (!imageFileName) {
-        console.error('No image file found at the given index');
-        return;
-    }
     const imageNameWithoutExtension = imageFileName.split('.')[0];
-    displayedImage.src = `50bb/${imageFileName}`;
+    const folder = currentImageType === 'ranges' ? '50bb' : 'eq';
+    console.log(`Displaying image from folder ${folder}: ${imageFileName}`);
+    displayedImage.src = `${folder}/${imageFileName}`;
     imageName.textContent = imageNameWithoutExtension;
-    imageViewer.style.display = 'flex';
-    overlay.style.display = 'block';
-    disableButtons();
-}
-
-function displayEquityImage(fileName) {
-    console.log(`Displaying equity image: ${fileName}`);
-    const imageViewer = document.getElementById('image-viewer');
-    const overlay = document.getElementById('overlay');
-    const displayedImage = document.getElementById('displayed-image');
-    const imageName = document.getElementById('image-name');
-    displayedImage.src = `eq/${fileName}.png`;
-    imageName.textContent = fileName;
     imageViewer.style.display = 'flex';
     overlay.style.display = 'block';
     disableButtons();
@@ -220,10 +214,110 @@ function enableButtons() {
     });
 }
 
+function submitLogin() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    fetch(`${protocol}//${host}:${port}/login`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Login successful');
+            isAuthenticated = true;
+            currentUser = username; // Сохраняем имя пользователя после успешного входа
+            enableButtons();
+            document.getElementById('stats-button').style.display = 'block';
+            closeLoginModal();
+        } else {
+            alert('Login failed: ' + data.message);
+        }
+    });
+}
+
+function submitRegister() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+
+    if (password !== confirmPassword) {
+        alert('Passwords do not match');
+        return;
+    }
+
+    fetch(`${protocol}//${host}:${port}/register`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Registration successful');
+            isAuthenticated = true;
+            currentUser = username; // Сохраняем имя пользователя после успешной регистрации
+            enableButtons();
+            document.getElementById('stats-button').style.display = 'block';
+            closeLoginModal();
+        } else {
+            alert('Registration failed: ' + data.message);
+        }
+    });
+}
+
+function loadStats() {
+    if (!currentUser) {
+        console.error('User is not logged in');
+        return;
+    }
+
+    fetch(`${protocol}//${host}:${port}/api/stats?username=${currentUser}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                let tableContent = `
+                    <table class="stats-table">
+                        <tr>
+                            <th>Дата</th>
+                            <th>Всего</th>
+                            <th>Верно</th>
+                            <th>Процент</th>
+                        </tr>`;
+                
+                data.stats.forEach(row => {
+                    tableContent += `
+                        <tr>
+                            <td>${row.date}</td>
+                            <td>${row.totalAnswers}</td>
+                            <td>${row.correctAnswers}</td>
+                            <td>${row.percentage.toFixed(2)}%</td>
+                        </tr>`;
+                });
+
+                tableContent += '</table>';
+                document.getElementById('stats-content').innerHTML = tableContent;
+            } else {
+                document.getElementById('stats-content').innerHTML = '<p>Ошибка при загрузке статистики</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading stats:', error);
+            document.getElementById('stats-content').innerHTML = '<p>Ошибка при загрузке статистики</p>';
+        });
+}
+
 function startTest() {
     fetch(`${protocol}//${host}:${port}/api/images`)
         .then(response => response.json())
         .then(files => {
+            console.log('Files received from server for test:', files);
             if (!Array.isArray(files)) {
                 console.error('Expected an array of files');
                 return;
@@ -323,11 +417,35 @@ function checkAnswer(button, selectedAnswer, correctAnswer, imagesToUse) {
 }
 
 function endTest() {
-    alert(`Тест завершен. Правильных: ${correctAnswers}, Неправильных: ${incorrectAnswers}`);
-    navigateTo('main');
-    correctAnswers = 0;
-    incorrectAnswers = 0;
-    document.getElementById('score').textContent = `Правильных: 0 | Неправильных: 0`;
+    const username = currentUser; // Используем текущего пользователя
+
+    fetch(`${protocol}//${host}:${port}/api/record-test`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            username: username,
+            correctAnswers: correctAnswers,
+            incorrectAnswers: incorrectAnswers
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Тест завершен. Правильных: ${correctAnswers}, Неправильных: ${incorrectAnswers}`);
+            navigateTo('main');
+            correctAnswers = 0;
+            incorrectAnswers = 0;
+            document.getElementById('score').textContent = `Правильных: 0 | Неправильных: 0`;
+        } else {
+            alert('Ошибка при записи результатов теста');
+        }
+    })
+    .catch(error => {
+        console.error('Error recording test results:', error);
+        alert('Ошибка при записи результатов теста');
+    });
 }
 
 // Функции для работы с модальным окном авторизации/регистрации
@@ -352,58 +470,4 @@ function showRegisterForm() {
     document.getElementById('login-button').style.display = 'none';
     document.getElementById('register-button').style.display = 'none';
     document.getElementById('submit-register-button').style.display = 'inline-block';
-}
-
-function submitLogin() {
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-
-    fetch(`${protocol}//${host}:${port}/login`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ username, password })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Login successful');
-            isAuthenticated = true; // Пользователь авторизован
-            enableButtons(); // Активировать кнопки
-            closeLoginModal();
-        } else {
-            alert('Login failed: ' + data.message);
-        }
-    });
-}
-
-function submitRegister() {
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirm-password').value;
-
-    if (password !== confirmPassword) {
-        alert('Passwords do not match');
-        return;
-    }
-
-    fetch(`${protocol}//${host}:${port}/register`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ username, password })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Registration successful');
-            isAuthenticated = true; // Пользователь авторизован после регистрации
-            enableButtons(); // Активировать кнопки
-            closeLoginModal();
-        } else {
-            alert('Registration failed: ' + data.message);
-        }
-    });
 }
