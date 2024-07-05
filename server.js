@@ -183,4 +183,4 @@ if (useSsl) {
     http.createServer(app).listen(port, () => {
         console.log(`HTTP Server running at http://localhost:${port}`);
     });
-};
+}
