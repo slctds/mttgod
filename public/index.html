@@ -15,7 +15,7 @@
             <button class="app-button disabled-button">Комбинаторика</button>
             <button class="app-button disabled-button">Нокауты</button>
         </div>
-	<button id="stats-button" class="stats-button" style="display: none;" onclick="navigateTo('stats')">Статистика</button>
+        <button id="stats-button" class="stats-button" style="display: none;" onclick="navigateTo('stats')">Статистика</button>
         <button class="login-button" onclick="openLoginModal()">Login</button>
     </div>
 
@@ -84,9 +84,8 @@
             <img id="test-image" src="" alt="Тестовая картинка" />
             <div id="answer-buttons" class="answer-buttons"></div>
             <div id="score">Правильных: 0 | Неправильных: 0</div>
-            <button class="app-button end-button" onclick="endTest()">End</button>
+            <button class="app-button end-button" onclick="endTest()">Закончить</button>
         </div>
-        <button class="app-button back-button" onclick="navigateTo('test')">Назад</button>
     </div>
 
     <div class="container" id="equity-menu" style="display: none;">
@@ -108,6 +107,14 @@
         <div class="study-instruction">Нажмите на кнопку диапазона, чтобы посмотреть его</div>
         <div class="button-grid" id="ranges-grid"></div>
         <button class="app-button back-button" onclick="navigateTo('ranges')">Назад</button>
+    </div>
+
+    <div class="container" id="stats-menu" style="display: none;">
+        <h2>Статистика</h2>
+        <div id="stats-content">
+            <p>Загрузка статистики...</p>
+        </div>
+        <button class="app-button" onclick="navigateTo('main')">Назад</button>
     </div>
 
     <div id="image-viewer" style="display: none;">

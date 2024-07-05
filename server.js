@@ -37,6 +37,14 @@ const db = new sqlite3.Database('./database.db', (err) => {
             incorrect_answers INTEGER,
             correct_percentage REAL
         )`);
+        db.run(`CREATE TABLE IF NOT EXISTS test_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT,
+            correct_answers INTEGER,
+            incorrect_answers INTEGER,
+            score REAL,
+            timestamp TEXT
+        )`);
     }
 });
 
@@ -48,8 +56,10 @@ app.get('/api/images', (req, res) => {
     const imagesDirectory = path.join(__dirname, 'public', '50bb');
     fs.readdir(imagesDirectory, (err, files) => {
         if (err) {
+            console.error('Failed to read directory:', err);
             return res.status(500).json({ error: 'Failed to read directory' });
         }
+        console.log('Files in 50bb directory:', files);
         res.json(files);
     });
 });
@@ -58,8 +68,10 @@ app.get('/api/eq-images', (req, res) => {
     const imagesDirectory = path.join(__dirname, 'public', 'eq');
     fs.readdir(imagesDirectory, (err, files) => {
         if (err) {
+            console.error('Failed to read directory:', err);
             return res.status(500).json({ error: 'Failed to read directory' });
         }
+        console.log('Files in eq directory:', files);
         res.json(files);
     });
 });
@@ -103,6 +115,58 @@ app.post('/record-session', (req, res) => {
             return res.status(500).json({ success: false, message: 'Failed to record session' });
         }
         res.status(200).json({ success: true });
+    });
+});
+
+app.post('/api/record-test', (req, res) => {
+    const { username, correctAnswers, incorrectAnswers } = req.body;
+    const totalQuestions = correctAnswers + incorrectAnswers;
+    const score = (totalQuestions > 0) ? (correctAnswers / totalQuestions) * 100 : 0;
+    const timestamp = new Date().toISOString();
+
+    const query = `INSERT INTO test_results (username, correct_answers, incorrect_answers, score, timestamp) VALUES (?, ?, ?, ?, ?)`;
+    const params = [username, correctAnswers, incorrectAnswers, score, timestamp];
+
+    db.run(query, params, function(err) {
+        if (err) {
+            console.error('Failed to record test results:', err);
+            return res.status(500).json({ success: false, message: 'Failed to record test results' });
+        }
+        res.json({ success: true });
+    });
+});
+
+app.get('/api/stats', (req, res) => {
+    const username = req.query.username;
+
+    const query = `
+        SELECT 
+            DATE(timestamp) as date,
+            SUM(correct_answers + incorrect_answers) as totalAnswers,
+            SUM(correct_answers) as correctAnswers,
+            (SUM(correct_answers) * 100.0 / SUM(correct_answers + incorrect_answers)) as percentage
+        FROM test_results
+        WHERE username = ?
+        GROUP BY DATE(timestamp)
+        UNION ALL
+        SELECT 
+            'Всего' as date,
+            SUM(correct_answers + incorrect_answers) as totalAnswers,
+            SUM(correct_answers) as correctAnswers,
+            (SUM(correct_answers) * 100.0 / SUM(correct_answers + incorrect_answers)) as percentage
+        FROM test_results
+        WHERE username = ?`;
+
+    db.all(query, [username, username], (err, rows) => {
+        if (err) {
+            console.error('Failed to get stats:', err);
+            return res.status(500).json({ success: false, message: 'Failed to get stats' });
+        }
+
+        res.json({
+            success: true,
+            stats: rows
+        });
     });
 });
 
