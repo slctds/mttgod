@@ -8,6 +8,10 @@ const https = require('https');
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
 
+console.log('PORT:', process.env.PORT);
+console.log('SSL_PORT:', process.env.SSL_PORT);
+console.log('USE_SSL:', process.env.USE_SSL);
+
 const app = express();
 const port = process.env.PORT || 3000;
 const sslPort = process.env.SSL_PORT || 3443;
@@ -80,11 +84,24 @@ app.post('/register', (req, res) => {
     const { username, password } = req.body;
     const hashedPassword = bcrypt.hashSync(password, 10);
 
-    db.run('INSERT INTO users (username, password) VALUES (?, ?)', [username, hashedPassword], function(err) {
+    db.get('SELECT username FROM users WHERE username = ?', [username], (err, row) => {
         if (err) {
-            return res.status(500).json({ success: false, message: 'Registration failed' });
+            console.error('Error checking username:', err);
+            return res.status(500).json({ success: false, message: 'Database error' });
         }
-        res.status(200).json({ success: true });
+        if (row) {
+            console.log('Username already exists:', username);
+            return res.status(400).json({ success: false, message: 'Username already exists' });
+        } else {
+            db.run('INSERT INTO users (username, password) VALUES (?, ?)', [username, hashedPassword], function(err) {
+                if (err) {
+                    console.error('Error inserting user:', err);
+                    return res.status(500).json({ success: false, message: 'Registration failed' });
+                }
+                console.log('User registered successfully:', username);
+                res.status(200).json({ success: true });
+            });
+        }
     });
 });
 
@@ -93,12 +110,15 @@ app.post('/login', (req, res) => {
 
     db.get('SELECT password FROM users WHERE username = ?', [username], (err, row) => {
         if (err) {
+            console.error('Error fetching user:', err);
             return res.status(500).json({ success: false, message: 'Login failed' });
         }
 
         if (row && bcrypt.compareSync(password, row.password)) {
+            console.log('Login successful for username:', username);
             res.status(200).json({ success: true });
         } else {
+            console.log('Invalid username or password for username:', username);
             res.status(401).json({ success: false, message: 'Invalid username or password' });
         }
     });
@@ -112,6 +132,7 @@ app.post('/record-session', (req, res) => {
     db.run("INSERT INTO sessions (username, login_date, test_type, correct_answers, incorrect_answers, correct_percentage) VALUES (?, ?, ?, ?, ?, ?)",
         [username, login_date, test_type, correct_answers, incorrect_answers, correct_percentage], function(err) {
         if (err) {
+            console.error('Failed to record session:', err);
             return res.status(500).json({ success: false, message: 'Failed to record session' });
         }
         res.status(200).json({ success: true });
@@ -140,7 +161,7 @@ app.get('/api/stats', (req, res) => {
     const username = req.query.username;
 
     const query = `
-        SELECT 
+        SELECT
             DATE(timestamp) as date,
             SUM(correct_answers + incorrect_answers) as totalAnswers,
             SUM(correct_answers) as correctAnswers,
@@ -149,7 +170,7 @@ app.get('/api/stats', (req, res) => {
         WHERE username = ?
         GROUP BY DATE(timestamp)
         UNION ALL
-        SELECT 
+        SELECT
             'Всего' as date,
             SUM(correct_answers + incorrect_answers) as totalAnswers,
             SUM(correct_answers) as correctAnswers,
@@ -184,3 +205,4 @@ if (useSsl) {
         console.log(`HTTP Server running at http://localhost:${port}`);
     });
 }
+
