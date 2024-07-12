@@ -1,9 +1,16 @@
 let currentUser = null;
+let currentTestFile = '';
+let currentHand = '';
+let currentCell = '';
 let correctAnswers = 0;
 let incorrectAnswers = 0;
+let previousHand = '';
+let previousCorrectAnswer = '';
 const protocol = window.location.protocol;
 const host = window.location.hostname;
 const port = window.location.port;
+
+let currentTestType = ''; // Переменная для хранения текущего типа теста
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM fully loaded and parsed');
@@ -63,6 +70,7 @@ function navigateTo(page) {
     } else if (page === 'test') {
         document.getElementById('test-menu').style.display = 'block';
     } else if (page === 'testByImage') {
+        currentTestType = 'testDIAP';
         document.getElementById('test-by-image-menu').style.display = 'block';
     } else if (page === 'testByNumber') {
         console.log('Test by Number');
@@ -78,6 +86,12 @@ function navigateTo(page) {
         currentImageType = 'equity';
         document.getElementById('equity-study-menu').style.display = 'block';
         loadEquityButtons('equity-grid');
+    } else if (page === 'equity-test') {
+        currentTestType = 'testEQ';
+        document.getElementById('equity-test-menu').style.display = 'block';
+        loadEquityTestButtons();
+    } else if (page === 'equity-test-question') {
+        document.getElementById('equity-test-question-menu').style.display = 'block';
     }
 }
 
@@ -146,6 +160,221 @@ function loadEquityButtons(gridId) {
             });
         })
         .catch(error => console.error('Error loading equity images:', error));
+}
+
+function loadEquityTestButtons() {
+    console.log('Loading equity test buttons');
+    fetch(`${protocol}//${host}:${port}/api/eqtest-files`)
+        .then(response => response.json())
+        .then(files => {
+            console.log('Equity test files received from server:', files);
+            if (!Array.isArray(files)) {
+                console.error('Expected an array of files');
+                return;
+            }
+
+            const buttonGrid = document.getElementById('equity-test-grid');
+            buttonGrid.innerHTML = '';
+
+            files.forEach((file) => {
+                if (file === 'hands.xlsx') {
+                    return; // Пропустить создание кнопки для этого файла
+                }
+
+                const button = document.createElement('button');
+                button.className = 'equity-test-button';
+                const fileNameWithoutExtension = file.split('.')[0];
+
+                if (fileNameWithoutExtension.length <= 2) {
+                    button.textContent = `vs ${fileNameWithoutExtension}`;
+                } else {
+                    const [X, Y] = fileNameWithoutExtension.split('-');
+                    button.textContent = `vs ${X}&${Y}`;
+                }
+
+                button.addEventListener('click', () => {
+                    console.log(`Button clicked: ${button.textContent}`);
+                    currentTestFile = fileNameWithoutExtension;
+                    startEquityTest();
+                });
+
+                buttonGrid.appendChild(button);
+            });
+        })
+        .catch(error => console.error('Error loading equity test files:', error));
+}
+
+function startEquityTest() {
+    console.log('Starting equity test with file:', currentTestFile);
+    checkOrCreateTestRecord().then(() => {
+        navigateTo('equity-test-question');
+        generateEquityTestQuestion();
+    });
+}
+
+function checkOrCreateTestRecord() {
+    return fetch(`${protocol}//${host}:${port}/api/check-or-create-test`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username: currentUser, testType: currentTestType })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Test record checked or created successfully');
+        } else {
+            console.error('Failed to check or create test record');
+        }
+    })
+    .catch(error => console.error('Error checking or creating test record:', error));
+}
+
+function generateEquityTestQuestion() {
+    fetch(`${protocol}//${host}:${port}/api/get-random-hand`)
+        .then(response => response.json())
+        .then(data => {
+            currentHand = data.hand;
+            currentCell = data.cell;
+            console.log('Generated hand:', currentHand);
+            displayEquityTestQuestion();
+        })
+        .catch(error => console.error('Error generating test question:', error));
+}
+
+function displayEquityTestQuestion() {
+    const questionContainer = document.getElementById('test-question');
+    questionContainer.innerHTML = `Сколько эквити у ${currentHand} против диапазона ${currentTestFile}%?`;
+
+    const answerButtons = [
+        '0-20', '21-25', '26-30', '31-35', '36-40',
+        '41-45', '46-50', '51-60', '61-70', '71-100'
+    ];
+
+    const answerButtonsContainer = document.getElementById('answer-buttons-equity');
+    answerButtonsContainer.className = 'answer-buttonsEquity';
+    answerButtonsContainer.innerHTML = '';
+
+    answerButtons.forEach(answer => {
+        const button = document.createElement('button');
+        button.className = 'equity-answer-button';
+        button.textContent = answer;
+        button.addEventListener('click', () => checkEquityAnswer(button, answer));
+        answerButtonsContainer.appendChild(button);
+    });
+
+    const eyeButton = document.createElement('button');
+    eyeButton.className = 'equity-eye-button';
+    eyeButton.innerHTML = '&#128065;'; // Значок глаза
+    eyeButton.addEventListener('click', toggleEquityImage);
+    answerButtonsContainer.appendChild(eyeButton);
+
+    displayPreviousQuestionInfo();
+}
+
+function toggleEquityImage() {
+    const imageViewer = document.getElementById('image-viewer-equity');
+    const displayedImage = document.getElementById('displayed-equity-image');
+    const overlay = document.getElementById('overlay-equity');
+    if (imageViewer.style.display === 'none' || imageViewer.style.display === '') {
+        displayedImage.src = `eq/${currentTestFile}.png`;
+        imageViewer.style.display = 'flex';
+        overlay.style.display = 'block';
+        disableEquityButtons();
+    } else {
+        closeEquityImage();
+    }
+}
+
+function closeEquityImage() {
+    const imageViewer = document.getElementById('image-viewer-equity');
+    const overlay = document.getElementById('overlay-equity');
+    imageViewer.style.display = 'none';
+    overlay.style.display = 'none';
+    setTimeout(() => {
+        enableEquityButtons();
+    }, 200);
+}
+
+function disableEquityButtons() {
+    const buttons = document.querySelectorAll('.equity-answer-button, .equity-eye-button');
+    buttons.forEach(button => {
+        button.disabled = true;
+    });
+}
+
+function enableEquityButtons() {
+    const buttons = document.querySelectorAll('.equity-answer-button, .equity-eye-button');
+    buttons.forEach(button => {
+        button.disabled = false;
+    });
+}
+
+function checkEquityAnswer(button, selectedAnswer) {
+    fetch(`${protocol}//${host}:${port}/api/check-answer`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ hand: currentHand, range: currentTestFile, selectedAnswer, cell: currentCell })
+    })
+    .then(response => response.json())
+    .then(data => {
+        const selectedRange = selectedAnswer.split('-');
+        const lowerBound = parseInt(selectedRange[0]);
+        const upperBound = parseInt(selectedRange[1]);
+
+        const isCorrect = data.correctAnswer >= lowerBound && data.correctAnswer <= upperBound;
+        if (isCorrect) {
+            correctAnswers++;
+            button.classList.add('correct');
+            console.log('Correct answer!');
+        } else {
+            incorrectAnswers++;
+            button.classList.add('incorrect');
+            console.log('Incorrect answer!');
+        }
+        console.log('Правильный ответ:', data.correctAnswer); // Вывод правильного ответа в терминал
+        updateTestRecord(isCorrect);
+
+        // Сохранение данных предыдущего вопроса
+        previousHand = currentHand;
+        previousCorrectAnswer = data.correctAnswer;
+
+        setTimeout(() => {
+            generateEquityTestQuestion();
+        }, 1000);
+    })
+    .catch(error => console.error('Error checking answer:', error));
+}
+
+function updateTestRecord(isCorrect) {
+    fetch(`${protocol}//${host}:${port}/api/update-test-record`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username: currentUser, testType: currentTestType, isCorrect })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Test record updated successfully');
+        } else {
+            console.error('Failed to update test record');
+        }
+    })
+    .catch(error => console.error('Error updating test record:', error));
+}
+
+function displayPreviousQuestionInfo() {
+    const previousQuestionInfoContainer = document.getElementById('previous-question-info');
+    if (previousHand && previousCorrectAnswer) {
+        previousQuestionInfoContainer.innerHTML = `у ${previousHand} ${previousCorrectAnswer}% эквити против диапазона ${currentTestFile}%`;
+    } else {
+        previousQuestionInfoContainer.innerHTML = '';
+    }
 }
 
 function displayImage(index) {
@@ -286,6 +515,7 @@ function loadStats() {
                     <table class="stats-table">
                         <tr>
                             <th>Дата</th>
+                            <th>Тест</th>
                             <th>Всего</th>
                             <th>Верно</th>
                             <th>Процент</th>
@@ -295,6 +525,7 @@ function loadStats() {
                     tableContent += `
                         <tr>
                             <td>${row.date}</td>
+                            <td>${row.test_name}</td>
                             <td>${row.totalAnswers}</td>
                             <td>${row.correctAnswers}</td>
                             <td>${row.percentage.toFixed(2)}%</td>
@@ -312,6 +543,7 @@ function loadStats() {
             document.getElementById('stats-content').innerHTML = '<p>Ошибка при загрузке статистики</p>';
         });
 }
+
 
 function startTest() {
     fetch(`${protocol}//${host}:${port}/api/images`)
@@ -352,7 +584,7 @@ function startTest() {
 }
 
 function loadNextTestImage(imagesToUse) {
-    if (!imagesToUse.length) {
+    if (!imagesToUse || !imagesToUse.length) {
         console.error('No images to use for the test');
         return;
     }
@@ -367,17 +599,20 @@ function loadNextTestImage(imagesToUse) {
     imageElement.src = `50bb/${selectedImage}`;
 
     const answerButtonsContainer = document.getElementById('answer-buttons');
+    answerButtonsContainer.className = 'answer-buttonsDiap';
     answerButtonsContainer.innerHTML = '';
 
     const possibleAnswers = generatePossibleAnswers(imageNameWithoutExtension, imagesToUse);
 
     possibleAnswers.forEach(answer => {
         const button = document.createElement('button');
+        button.className = 'diap-answer-button'; // Новый класс для кнопок теста диапазонов
         button.textContent = answer;
-        button.onclick = () => checkAnswer(button, answer, imageNameWithoutExtension, imagesToUse);
+        button.onclick = () => checkDiapAnswer(button, answer, imageNameWithoutExtension, imagesToUse);
         answerButtonsContainer.appendChild(button);
     });
 }
+
 
 function generatePossibleAnswers(correctAnswer, imagesToUse) {
     const answers = [correctAnswer];
@@ -400,7 +635,7 @@ function shuffleArray(array) {
     return array;
 }
 
-function checkAnswer(button, selectedAnswer, correctAnswer, imagesToUse) {
+function checkDiapAnswer(button, selectedAnswer, correctAnswer, imagesToUse) {
     if (selectedAnswer === correctAnswer) {
         button.classList.add('correct');
         correctAnswers++;
@@ -426,6 +661,7 @@ function endTest() {
         },
         body: JSON.stringify({
             username: username,
+            testName: currentTestType, // Имя теста
             correctAnswers: correctAnswers,
             incorrectAnswers: incorrectAnswers
         })

@@ -7,6 +7,7 @@ const http = require('http');
 const https = require('https');
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
+const xlsx = require('xlsx');
 
 console.log('PORT:', process.env.PORT);
 console.log('SSL_PORT:', process.env.SSL_PORT);
@@ -44,9 +45,9 @@ const db = new sqlite3.Database('./database.db', (err) => {
         db.run(`CREATE TABLE IF NOT EXISTS test_results (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT,
+            test_name TEXT,
             correct_answers INTEGER,
             incorrect_answers INTEGER,
-            score REAL,
             timestamp TEXT
         )`);
     }
@@ -64,6 +65,18 @@ app.get('/api/images', (req, res) => {
             return res.status(500).json({ error: 'Failed to read directory' });
         }
         console.log('Files in 50bb directory:', files);
+        res.json(files);
+    });
+});
+
+app.get('/api/eqtest-files', (req, res) => {
+    const eqtestDirectory = path.join(__dirname, 'public', 'eqtest');
+    fs.readdir(eqtestDirectory, (err, files) => {
+        if (err) {
+            console.error('Failed to read directory:', err);
+            return res.status(500).json({ error: 'Failed to read directory' });
+        }
+        console.log('Files in eqtest directory:', files); // Логгирование текущей папки и файлов
         res.json(files);
     });
 });
@@ -140,13 +153,11 @@ app.post('/record-session', (req, res) => {
 });
 
 app.post('/api/record-test', (req, res) => {
-    const { username, correctAnswers, incorrectAnswers } = req.body;
-    const totalQuestions = correctAnswers + incorrectAnswers;
-    const score = (totalQuestions > 0) ? (correctAnswers / totalQuestions) * 100 : 0;
+    const { username, testName, correctAnswers, incorrectAnswers } = req.body;
     const timestamp = new Date().toISOString();
 
-    const query = `INSERT INTO test_results (username, correct_answers, incorrect_answers, score, timestamp) VALUES (?, ?, ?, ?, ?)`;
-    const params = [username, correctAnswers, incorrectAnswers, score, timestamp];
+    const query = `INSERT INTO test_results (username, test_name, correct_answers, incorrect_answers, timestamp) VALUES (?, ?, ?, ?, ?)`;
+    const params = [username, testName, correctAnswers, incorrectAnswers, timestamp];
 
     db.run(query, params, function(err) {
         if (err) {
@@ -163,20 +174,23 @@ app.get('/api/stats', (req, res) => {
     const query = `
         SELECT
             DATE(timestamp) as date,
+            test_name,
             SUM(correct_answers + incorrect_answers) as totalAnswers,
             SUM(correct_answers) as correctAnswers,
             (SUM(correct_answers) * 100.0 / SUM(correct_answers + incorrect_answers)) as percentage
         FROM test_results
         WHERE username = ?
-        GROUP BY DATE(timestamp)
+        GROUP BY DATE(timestamp), test_name
         UNION ALL
         SELECT
             'Всего' as date,
+            test_name,
             SUM(correct_answers + incorrect_answers) as totalAnswers,
             SUM(correct_answers) as correctAnswers,
             (SUM(correct_answers) * 100.0 / SUM(correct_answers + incorrect_answers)) as percentage
         FROM test_results
-        WHERE username = ?`;
+        WHERE username = ?
+        GROUP BY test_name`;
 
     db.all(query, [username, username], (err, rows) => {
         if (err) {
@@ -184,10 +198,88 @@ app.get('/api/stats', (req, res) => {
             return res.status(500).json({ success: false, message: 'Failed to get stats' });
         }
 
+        // Обработка данных для изменения имен тестов
+        rows.forEach(row => {
+            if (row.test_name === 'testDIAP') {
+                row.test_name = 'DP';
+            } else if (row.test_name === 'testEQ') {
+                row.test_name = 'EQ';
+            }
+        });
+
         res.json({
             success: true,
             stats: rows
         });
+    });
+});
+
+
+app.post('/api/check-or-create-test', (req, res) => {
+    const { username, testType } = req.body;
+    const today = new Date().toISOString().split('T')[0];
+
+    db.get('SELECT * FROM sessions WHERE username = ? AND login_date = ? AND test_type = ?', [username, today, testType], (err, row) => {
+        if (err) {
+            console.error('Error checking test record:', err);
+            return res.status(500).json({ success: false });
+        }
+
+        if (!row) {
+            db.run('INSERT INTO sessions (username, login_date, test_type, correct_answers, incorrect_answers) VALUES (?, ?, ?, 0, 0)', [username, today, testType], function(err) {
+                if (err) {
+                    console.error('Error creating test record:', err);
+                    return res.status(500).json({ success: false });
+                }
+                res.status(200).json({ success: true });
+            });
+        } else {
+            res.status(200).json({ success: true });
+        }
+    });
+});
+
+app.get('/api/get-random-hand', (req, res) => {
+    const handsFile = path.join(__dirname, 'public', 'eqtest', 'hands.xlsx');
+    const workbook = xlsx.readFile(handsFile);
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const range = xlsx.utils.decode_range(sheet['!ref']);
+    
+    const randomRow = Math.floor(Math.random() * (range.e.r + 1));
+    const randomCol = Math.floor(Math.random() * (range.e.c + 1));
+    const cellAddress = xlsx.utils.encode_cell({ c: randomCol, r: randomRow });
+    const randomHand = sheet[cellAddress]?.v || 'Unknown';
+
+    res.json({ hand: randomHand, cell: cellAddress });
+});
+
+app.post('/api/check-answer', (req, res) => {
+    const { hand, range, selectedAnswer, cell } = req.body;
+    const filePath = path.join(__dirname, 'public', 'eqtest', `${range}.xlsx`);
+    const workbook = xlsx.readFile(filePath);
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const correctEquity = sheet[cell]?.v || 0;
+
+    const isCorrect = selectedAnswer === "0-50" ? correctEquity <= 50 : correctEquity > 50;
+
+    console.log(`Correct equity: ${correctEquity}`); // Вывод правильного ответа в терминал
+
+    res.json({ correct: isCorrect, correctAnswer: correctEquity });
+});
+
+app.post('/api/update-test-record', (req, res) => {
+    const { username, testType, isCorrect } = req.body;
+    const today = new Date().toISOString().split('T')[0];
+
+    const field = isCorrect ? 'correct_answers' : 'incorrect_answers';
+    const query = `UPDATE sessions SET ${field} = ${field} + 1 WHERE username = ? AND login_date = ? AND test_type = ?`;
+
+    db.run(query, [username, today, testType], function(err) {
+        if (err) {
+            console.error('Error updating test record:', err);
+            return res.status(500).json({ success: false });
+        }
+        res.json({ success: true });
     });
 });
 
@@ -205,4 +297,3 @@ if (useSsl) {
         console.log(`HTTP Server running at http://localhost:${port}`);
     });
 }
-

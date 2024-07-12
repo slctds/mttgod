@@ -150,7 +150,7 @@ body {
 }
 
 /* Стиль для кнопок диапазонов */
-.range-button, .study-button, .equity-button {
+.range-button, .study-button, .equity-button, .diap-answer-button {
     font-size: 12px;
     padding: 20px;
     background-color: #ff7043; /* Оранжевый цвет */
@@ -163,7 +163,7 @@ body {
 }
 
 /* Стиль для кнопок диапазонов при наведении */
-.range-button:hover, .study-button:hover, .equity-button:hover {
+.range-button:hover, .study-button:hover, .equity-button:hover, .diap-answer-button:hover {
     background-color: #ff5722;
 }
 
@@ -317,28 +317,32 @@ button.disabled {
     color: white;
 }
 
-#score {
-    margin-top: 20px;
-    font-size: 18px;
-    color: black;
+.answer-buttonsDiap {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
 }
 
-.answer-buttons button {
+.answer-buttonsEquity {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.answer-buttonsDiap button, .answer-buttonsEquity button {
     padding: 10px;
     font-size: 18px;
     border: none;
     cursor: pointer;
     transition: background-color 0.3s;
-    background-color: #2196F3;
-    color: white;
 }
 
-.answer-buttons button.correct {
+.answer-buttonsDiap button.correct, .answer-buttonsEquity button.correct {
     background-color: #4CAF50;
     color: white;
 }
 
-.answer-buttons button.incorrect {
+.answer-buttonsDiap button.incorrect, .answer-buttonsEquity button.incorrect {
     background-color: #f44336;
     color: white;
 }
@@ -380,4 +384,88 @@ button.disabled {
 
 .stats-table td {
     background-color: #ffffff;
+}
+
+/* Стили для тестов по эквити */
+.equity-test-button {
+    font-size: 16px;
+    padding: 10px;
+    background-color: #8BC34A; /* Зеленый цвет */
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    box-sizing: border-box;
+    height: auto;
+}
+
+.equity-test-button:hover {
+    background-color: #7CB342;
+}
+
+.equity-answer-button {
+    font-size: 14px;
+    padding: 10px;
+    margin: 5px;
+    background-color: #2196F3; /* Синий цвет */
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.equity-answer-button:hover {
+    background-color: #1976D2;
+}
+
+.equity-eye-button {
+    font-size: 14px;
+    padding: 10px;
+    margin: 5px;
+    background-color: #2196F3; /* Синий цвет */
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.equity-eye-button:hover {
+    background-color: #1976D2;
+}
+
+/* Стили для просмотра изображений */
+#image-viewer-equity {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+}
+
+#overlay-equity {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 1001;
+}
+
+#displayed-equity-image {
+    max-width: 90%;
+    max-height: 80%;
+    cursor: pointer;
+    z-index: 1002;
+}
+
+.previous-question-info {
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: black;
 }
