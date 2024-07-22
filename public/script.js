@@ -70,7 +70,7 @@ function navigateTo(page) {
     } else if (page === 'test') {
         document.getElementById('test-menu').style.display = 'block';
     } else if (page === 'testByImage') {
-        currentTestType = 'testDIAP';
+        currentTestType = 'DP50';
         document.getElementById('test-by-image-menu').style.display = 'block';
     } else if (page === 'testByNumber') {
         console.log('Test by Number');
@@ -187,14 +187,17 @@ function loadEquityTestButtons() {
 
                 if (fileNameWithoutExtension.length <= 2) {
                     button.textContent = `vs ${fileNameWithoutExtension}`;
+                    button.dataset.testType = `EQ${fileNameWithoutExtension}`; // Присвоение правильного идентификатора
                 } else {
                     const [X, Y] = fileNameWithoutExtension.split('-');
                     button.textContent = `vs ${X}&${Y}`;
+                    button.dataset.testType = `testDIAP${fileNameWithoutExtension}`; // Присвоение правильного идентификатора
                 }
 
                 button.addEventListener('click', () => {
                     console.log(`Button clicked: ${button.textContent}`);
                     currentTestFile = fileNameWithoutExtension;
+                    currentTestType = button.dataset.testType; // Установка типа теста
                     startEquityTest();
                 });
 
@@ -311,6 +314,7 @@ function enableEquityButtons() {
     });
 }
 
+// Проверка ответа на эквити
 function checkEquityAnswer(button, selectedAnswer) {
     fetch(`${protocol}//${host}:${port}/api/check-answer`, {
         method: 'POST',
@@ -349,6 +353,7 @@ function checkEquityAnswer(button, selectedAnswer) {
     .catch(error => console.error('Error checking answer:', error));
 }
 
+// Обновление записи теста
 function updateTestRecord(isCorrect) {
     fetch(`${protocol}//${host}:${port}/api/update-test-record`, {
         method: 'POST',
@@ -511,6 +516,7 @@ function loadStats() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                console.log('Stats data:', data);
                 let tableContent = `
                     <table class="stats-table">
                         <tr>
@@ -520,31 +526,226 @@ function loadStats() {
                             <th>Верно</th>
                             <th>Процент</th>
                         </tr>`;
-                
-                data.stats.forEach(row => {
+
+                data.stats.forEach((row, index) => {
+                    const percentage = row.percentage != null ? row.percentage.toFixed(2) : 'N/A';
+                    const isEQ = row.category === 'EQ';
+                    const isDP = row.category === 'DP';
                     tableContent += `
-                        <tr>
-                            <td>${row.date}</td>
-                            <td>${row.test_name}</td>
+                        <tr onclick="toggleStatDetails('${row.category}', 'stat-${index}')">
+                            <td>Total</td>
+                            <td class="${isEQ ? 'eq-button' : isDP ? 'dp-button' : ''}">${row.category}</td>
                             <td>${row.totalAnswers}</td>
                             <td>${row.correctAnswers}</td>
-                            <td>${row.percentage.toFixed(2)}%</td>
+                            <td>${percentage}%</td>
+                        </tr>
+                        <tr id="stat-${index}" class="collapsible-content collapsed">
+                            <td colspan="5">
+                                <div id="stat-content-stat-${index}"></div>
+                            </td>
                         </tr>`;
                 });
 
                 tableContent += '</table>';
                 document.getElementById('stats-content').innerHTML = tableContent;
             } else {
-                document.getElementById('stats-content').innerHTML = '<p>Ошибка при загрузке статистики</p>';
+                document.getElementById('stats-content').innerHTML = '<p>Ошибка при загрузке статистики</п>';
             }
         })
         .catch(error => {
             console.error('Error loading stats:', error);
-            document.getElementById('stats-content').innerHTML = '<p>Ошибка при загрузке статистики</p>';
+            document.getElementById('stats-content').innerHTML = '<p>Ошибка при загрузке статистики</п>';
         });
 }
 
+function toggleStatDetails(category, elementId) {
+    console.log(`Toggling stat details for ${category}, elementId: ${elementId}`);
+    const contentElement = document.getElementById(`stat-content-${elementId}`);
+    if (!contentElement) {
+        console.error(`Element with id stat-content-${elementId} not found`);
+        return;
+    }
 
+    if (category === 'EQ') {
+        if (isStatsEQOpen) {
+            contentElement.innerHTML = '';
+            isStatsEQOpen = false;
+            toggleCollapsibleContent(elementId);
+        } else {
+            loadStatsEQ(contentElement, elementId);
+            isStatsEQOpen = true;
+        }
+    } else if (category === 'DP') {
+        if (isStatsDPOpen) {
+            contentElement.innerHTML = '';
+            isStatsDPOpen = false;
+            toggleCollapsibleContent(elementId);
+        } else {
+            loadStatsDP(contentElement, elementId);
+            isStatsDPOpen = true;
+        }
+    } else {
+        // Для других категорий добавьте нужную логику, если необходимо
+        toggleCollapsibleContent(elementId);
+    }
+}
+
+function loadStatsEQ(contentElement, elementId) {
+    fetch(`${protocol}//${host}:${port}/api/stats/eq?username=${currentUser}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                let tableContent = `
+                    <table class="stats-table">
+                        <tr>
+                            <th>Дата</th>
+                            <th>Тест</th>
+                            <th>Всего</th>
+                            <th>Верно</th>
+                            <th>Процент</th>
+                        </tr>`;
+
+                data.stats.forEach((row, index) => {
+                    const percentage = row.percentage != null ? row.percentage.toFixed(2) : 'N/A';
+                    const eqElementId = `eq-stat-${elementId}-${index}`;
+                    tableContent += `
+                        <tr onclick="toggleDetailedStat('EQ', '${row.test_name}', '${eqElementId}')">
+                            <td>All</td>
+                            <td>${row.test_name}</td>
+                            <td>${row.totalAnswers}</td>
+                            <td>${row.correctAnswers}</td>
+                            <td>${percentage}%</td>
+                        </tr>
+                        <tr id="${eqElementId}" class="collapsible-content collapsed">
+                            <td colspan="5">
+                                <div id="eq-content-${eqElementId}"></div>
+                            </td>
+                        </tr>`;
+                });
+
+                tableContent += '</table>';
+                contentElement.innerHTML = tableContent;
+                toggleCollapsibleContent(elementId);
+            } else {
+                contentElement.innerHTML = '<p>Ошибка при загрузке статистики</п>';
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка при загрузке statsEQ:', error);
+            contentElement.innerHTML = '<p>Ошибка при загрузке статистики</п>';
+        });
+}
+
+function loadStatsDP(contentElement, elementId) {
+    fetch(`${protocol}//${host}:${port}/api/stats/dp?username=${currentUser}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                let tableContent = `
+                    <table class="stats-table">
+                        <tr>
+                            <th>Дата</th>
+                            <th>Тест</th>
+                            <th>Всего</th>
+                            <th>Верно</th>
+                            <th>Процент</th>
+                        </tr>`;
+
+                data.stats.forEach((row, index) => {
+                    const percentage = row.percentage != null ? row.percentage.toFixed(2) : 'N/A';
+                    const dpElementId = `dp-stat-${elementId}-${index}`;
+                    tableContent += `
+                        <tr onclick="toggleDetailedStat('DP', '${row.test_name}', '${dpElementId}')">
+                            <td>All</td>
+                            <td>${row.test_name}</td>
+                            <td>${row.totalAnswers}</td>
+                            <td>${row.correctAnswers}</td>
+                            <td>${percentage}%</td>
+                        </tr>
+                        <tr id="${dpElementId}" class="collapsible-content collapsed">
+                            <td colspan="5">
+                                <div id="dp-content-${dpElementId}"></div>
+                            </td>
+                        </tr>`;
+                });
+
+                tableContent += '</table>';
+                contentElement.innerHTML = tableContent;
+                toggleCollapsibleContent(elementId);
+            } else {
+                contentElement.innerHTML = '<p>Ошибка при загрузке статистики</п>';
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка при загрузке statsDP:', error);
+            contentElement.innerHTML = '<п>Ошибка при загрузке статистики</п>';
+        });
+}
+
+function toggleDetailedStat(type, testName, elementId) {
+    console.log(`Toggling detailed stat for ${type} ${testName}, elementId: ${elementId}`);
+    const contentElement = document.getElementById(`${type.toLowerCase()}-content-${elementId}`);
+    if (!contentElement) {
+        console.error(`Element with id ${type.toLowerCase()}-content-${elementId} not found`);
+        return;
+    }
+
+    if (contentElement.innerHTML.trim() !== '') {
+        contentElement.innerHTML = '';
+        toggleCollapsibleContent(elementId);
+        return;
+    }
+
+    fetch(`${protocol}//${host}:${port}/api/stats/details?username=${currentUser}&testName=${testName}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                let tableContent = `
+                    <table class="stats-table">
+                        <tr>
+                            <th>Дата</th>
+                            <th>Тест</th>
+                            <th>Всего</th>
+                            <th>Верно</th>
+                            <th>Процент</th>
+                        </tr>`;
+
+                data.stats.forEach(row => {
+                    const percentage = row.percentage != null ? row.percentage.toFixed(2) : 'N/A';
+                    tableContent += `
+                        <tr>
+                            <td>${row.date}</td>
+                            <td>${row.test_name}</td>
+                            <td>${row.totalAnswers}</td>
+                            <td>${row.correctAnswers}</td>
+                            <td>${percentage}%</td>
+                        </tr>`;
+                });
+
+                tableContent += '</table>';
+                contentElement.innerHTML = tableContent;
+                toggleCollapsibleContent(elementId);
+            } else {
+                contentElement.innerHTML = '<p>Ошибка при загрузке статистики</п>';
+            }
+        })
+        .catch(error => {
+            console.error(`Ошибка при загрузке статистики ${type} ${testName}:`, error);
+            contentElement.innerHTML = `<п>Ошибка при загрузке статистики ${type}</п>`;
+        });
+}
+
+// Функции для работы с тестом
 function startTest() {
     fetch(`${protocol}//${host}:${port}/api/images`)
         .then(response => response.json())
@@ -612,7 +813,6 @@ function loadNextTestImage(imagesToUse) {
         answerButtonsContainer.appendChild(button);
     });
 }
-
 
 function generatePossibleAnswers(correctAnswer, imagesToUse) {
     const answers = [correctAnswer];
@@ -706,4 +906,396 @@ function showRegisterForm() {
     document.getElementById('login-button').style.display = 'none';
     document.getElementById('register-button').style.display = 'none';
     document.getElementById('submit-register-button').style.display = 'inline-block';
+}
+
+function toggleCollapsibleContent(elementId) {
+    const element = document.getElementById(elementId);
+    if (element.classList.contains('expanded')) {
+        element.classList.remove('expanded');
+        element.classList.add('collapsed');
+    } else {
+        element.classList.remove('collapsed');
+        element.classList.add('expanded');
+    }
+}
+
+// Добавление глобального состояния для отслеживания открытой/закрытой таблицы statsEQ и statsDP
+let isStatsEQOpen = false;
+let isStatsDPOpen = false;
+
+function loadStats() {
+    if (!currentUser) {
+        console.error('User is not logged in');
+        return;
+    }
+
+    fetch(`${protocol}//${host}:${port}/api/stats?username=${currentUser}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Stats data:', data);
+                let tableContent = `
+                    <table class="stats-table">
+                        <tr>
+                            <th>Дата</th>
+                            <th>Тест</th>
+                            <th>Всего</th>
+                            <th>Верно</th>
+                            <th>Процент</th>
+                        </tr>`;
+                
+                data.stats.forEach((row, index) => {
+                    const percentage = row.percentage != null ? row.percentage.toFixed(2) : 'N/A';
+                    const isEQ = row.category === 'EQ';
+                    const isDP = row.category === 'DP';
+                    tableContent += `
+                        <tr onclick="toggleStatDetails('${row.category}', 'stat-${index}')">
+                            <td>Total</td>
+                            <td class="${isEQ ? 'eq-button' : isDP ? 'dp-button' : ''}">${row.category}</td>
+                            <td>${row.totalAnswers}</td>
+                            <td>${row.correctAnswers}</td>
+                            <td>${percentage}%</td>
+                        </tr>
+                        <tr id="stat-${index}" class="collapsible-content collapsed">
+                            <td colspan="5">
+                                <div id="stat-content-stat-${index}"></div>
+                            </td>
+                        </tr>`;
+                });
+
+                tableContent += '</table>';
+                document.getElementById('stats-content').innerHTML = tableContent;
+            } else {
+                document.getElementById('stats-content').innerHTML = '<p>Ошибка при загрузке статистики</п>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading stats:', error);
+            document.getElementById('stats-content').innerHTML = '<p>Ошибка при загрузке статистики</п>';
+        });
+}
+
+function toggleStatDetails(category, elementId) {
+    console.log(`Toggling stat details for ${category}, elementId: ${elementId}`);
+    const contentElement = document.getElementById(`stat-content-${elementId}`);
+    if (!contentElement) {
+        console.error(`Element with id stat-content-${elementId} not found`);
+        return;
+    }
+
+    if (category === 'EQ') {
+        if (isStatsEQOpen) {
+            contentElement.innerHTML = '';
+            isStatsEQOpen = false;
+            toggleCollapsibleContent(elementId);
+        } else {
+            loadStatsEQ(contentElement, elementId);
+            isStatsEQOpen = true;
+        }
+    } else if (category === 'DP') {
+        if (isStatsDPOpen) {
+            contentElement.innerHTML = '';
+            isStatsDPOpen = false;
+            toggleCollapsibleContent(elementId);
+        } else {
+            loadStatsDP(contentElement, elementId);
+            isStatsDPOpen = true;
+        }
+    } else {
+        // Для других категорий добавьте нужную логику, если необходимо
+        toggleCollapsibleContent(elementId);
+    }
+}
+
+function loadStatsEQ(contentElement, elementId) {
+    fetch(`${protocol}//${host}:${port}/api/stats/eq?username=${currentUser}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                let tableContent = `
+                    <table class="stats-table">
+                        <tr>
+                            <th>Дата</th>
+                            <th>Тест</th>
+                            <th>Всего</th>
+                            <th>Верно</th>
+                            <th>Процент</th>
+                        </tr>`;
+
+                data.stats.forEach((row, index) => {
+                    const percentage = row.percentage != null ? row.percentage.toFixed(2) : 'N/A';
+                    const eqElementId = `eq-stat-${elementId}-${index}`;
+                    tableContent += `
+                        <tr onclick="toggleDetailedStat('EQ', '${row.test_name}', '${eqElementId}')">
+                            <td>All</td>
+                            <td>${row.test_name}</td>
+                            <td>${row.totalAnswers}</td>
+                            <td>${row.correctAnswers}</td>
+                            <td>${percentage}%</td>
+                        </tr>
+                        <tr id="${eqElementId}" class="collapsible-content collapsed">
+                            <td colspan="5">
+                                <div id="eq-content-${eqElementId}"></div>
+                            </td>
+                        </tr>`;
+                });
+
+                tableContent += '</table>';
+                contentElement.innerHTML = tableContent;
+                toggleCollapsibleContent(elementId);
+            } else {
+                contentElement.innerHTML = '<p>Ошибка при загрузке статистики</п>';
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка при загрузке statsEQ:', error);
+            contentElement.innerHTML = '<p>Ошибка при загрузке статистики</п>';
+        });
+}
+
+function loadStatsDP(contentElement, elementId) {
+    fetch(`${protocol}//${host}:${port}/api/stats/dp?username=${currentUser}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                let tableContent = `
+                    <table class="stats-table">
+                        <tr>
+                            <th>Дата</th>
+                            <th>Тест</th>
+                            <th>Всего</th>
+                            <th>Верно</th>
+                            <th>Процент</th>
+                        </tr>`;
+
+                data.stats.forEach((row, index) => {
+                    const percentage = row.percentage != null ? row.percentage.toFixed(2) : 'N/A';
+                    const dpElementId = `dp-stat-${elementId}-${index}`;
+                    tableContent += `
+                        <tr onclick="toggleDetailedStat('DP', '${row.test_name}', '${dpElementId}')">
+                            <td>All</td>
+                            <td>${row.test_name}</td>
+                            <td>${row.totalAnswers}</td>
+                            <td>${row.correctAnswers}</td>
+                            <td>${percentage}%</td>
+                        </tr>
+                        <tr id="${dpElementId}" class="collapsible-content collapsed">
+                            <td colspan="5">
+                                <div id="dp-content-${dpElementId}"></div>
+                            </td>
+                        </tr>`;
+                });
+
+                tableContent += '</table>';
+                contentElement.innerHTML = tableContent;
+                toggleCollapsibleContent(elementId);
+            } else {
+                contentElement.innerHTML = '<п>Ошибка при загрузке статистики</п>';
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка при загрузке statsDP:', error);
+            contentElement.innerHTML = '<п>Ошибка при загрузке статистики</п>';
+        });
+}
+
+function toggleDetailedStat(type, testName, elementId) {
+    console.log(`Toggling detailed stat for ${type} ${testName}, elementId: ${elementId}`);
+    const contentElement = document.getElementById(`${type.toLowerCase()}-content-${elementId}`);
+    if (!contentElement) {
+        console.error(`Element with id ${type.toLowerCase()}-content-${elementId} not found`);
+        return;
+    }
+
+    if (contentElement.innerHTML.trim() !== '') {
+        contentElement.innerHTML = '';
+        toggleCollapsibleContent(elementId);
+        return;
+    }
+
+    fetch(`${protocol}//${host}:${port}/api/stats/details?username=${currentUser}&testName=${testName}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                let tableContent = `
+                    <table class="stats-table">
+                        <tr>
+                            <th>Дата</th>
+                            <th>Тест</th>
+                            <th>Всего</th>
+                            <th>Верно</th>
+                            <th>Процент</th>
+                        </tr>`;
+
+                data.stats.forEach(row => {
+                    const percentage = row.percentage != null ? row.percentage.toFixed(2) : 'N/A';
+                    tableContent += `
+                        <tr>
+                            <td>${row.date}</td>
+                            <td>${row.test_name}</td>
+                            <td>${row.totalAnswers}</td>
+                            <td>${row.correctAnswers}</td>
+                            <td>${percentage}%</td>
+                        </tr>`;
+                });
+
+                tableContent += '</table>';
+                contentElement.innerHTML = tableContent;
+                toggleCollapsibleContent(elementId);
+            } else {
+                contentElement.innerHTML = '<p>Ошибка при загрузке статистики</п>';
+            }
+        })
+        .catch(error => {
+            console.error(`Ошибка при загрузке статистики ${type} ${testName}:`, error);
+            contentElement.innerHTML = `<п>Ошибка при загрузке статистики ${type}</п>`;
+        });
+}
+
+function startTest() {
+    fetch(`${protocol}//${host}:${port}/api/images`)
+        .then(response => response.json())
+        .then(files => {
+            console.log('Files received from server for test:', files);
+            if (!Array.isArray(files)) {
+                console.error('Expected an array of files');
+                return;
+            }
+
+            currentImageList = files;
+            const basicSwitch = document.getElementById('basic-switch').checked;
+            const boundariesSwitch = document.getElementById('boundaries-switch').checked;
+            let imagesToUse = [];
+
+            console.log('Files:', files);
+
+            if (basicSwitch && boundariesSwitch) {
+                imagesToUse = currentImageList;
+            } else if (basicSwitch) {
+                imagesToUse = currentImageList.filter(file => file.split('.')[0].length === 2);
+            } else if (boundariesSwitch) {
+                imagesToUse = currentImageList.filter(file => file.split('.')[0].length > 2);
+            }
+
+            console.log('Images to use:', imagesToUse);
+
+            if (imagesToUse.length === 0) {
+                alert('Нет доступных изображений для выбранных настроек.');
+                return;
+            }
+
+            navigateTo('imageTest');
+            loadNextTestImage(imagesToUse);
+        })
+        .catch(error => console.error('Error loading images:', error));
+}
+
+function loadNextTestImage(imagesToUse) {
+    if (!imagesToUse || !imagesToUse.length) {
+        console.error('No images to use for the test');
+        return;
+    }
+    const randomIndex = Math.floor(Math.random() * imagesToUse.length);
+    const selectedImage = imagesToUse[randomIndex];
+    if (!selectedImage) {
+        console.error('No image selected for the test');
+        return;
+    }
+    const imageNameWithoutExtension = selectedImage.split('.')[0];
+    const imageElement = document.getElementById('test-image');
+    imageElement.src = `50bb/${selectedImage}`;
+
+    const answerButtonsContainer = document.getElementById('answer-buttons');
+    answerButtonsContainer.className = 'answer-buttonsDiap';
+    answerButtonsContainer.innerHTML = '';
+
+    const possibleAnswers = generatePossibleAnswers(imageNameWithoutExtension, imagesToUse);
+
+    possibleAnswers.forEach(answer => {
+        const button = document.createElement('button');
+        button.className = 'diap-answer-button'; // Новый класс для кнопок теста диапазонов
+        button.textContent = answer;
+        button.onclick = () => checkDiapAnswer(button, answer, imageNameWithoutExtension, imagesToUse);
+        answerButtonsContainer.appendChild(button);
+    });
+}
+
+function generatePossibleAnswers(correctAnswer, imagesToUse) {
+    const answers = [correctAnswer];
+    const filteredImages = imagesToUse.map(file => file.split('.')[0]);
+    while (answers.length < 6) {
+        const randomIndex = Math.floor(Math.random() * filteredImages.length);
+        const randomAnswer = filteredImages[randomIndex];
+        if (!answers.includes(randomAnswer)) {
+            answers.push(randomAnswer);
+        }
+    }
+    return shuffleArray(answers);
+}
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+function checkDiapAnswer(button, selectedAnswer, correctAnswer, imagesToUse) {
+    if (selectedAnswer === correctAnswer) {
+        button.classList.add('correct');
+        correctAnswers++;
+    } else {
+        button.classList.add('incorrect');
+        incorrectAnswers++;
+    }
+
+    document.getElementById('score').textContent = `Правильных: ${correctAnswers} | Неправильных: ${incorrectAnswers}`;
+
+    setTimeout(() => {
+        loadNextTestImage(imagesToUse);
+    }, 1000);
+}
+
+function endTest() {
+    const username = currentUser; // Используем текущего пользователя
+
+    fetch(`${protocol}//${host}:${port}/api/record-test`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            username: username,
+            testName: currentTestType, // Имя теста
+            correctAnswers: correctAnswers,
+            incorrectAnswers: incorrectAnswers
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Тест завершен. Правильных: ${correctAnswers}, Неправильных: ${incorrectAnswers}`);
+            navigateTo('main');
+            correctAnswers = 0;
+            incorrectAnswers = 0;
+            document.getElementById('score').textContent = `Правильных: 0 | Неправильных: 0`;
+        } else {
+            alert('Ошибка при записи результатов теста');
+        }
+    })
+    .catch(error => {
+        console.error('Error recording test results:', error);
+        alert('Ошибка при записи результатов теста');
+    });
 }

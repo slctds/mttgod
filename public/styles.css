@@ -469,3 +469,20 @@ button.disabled {
     margin-bottom: 10px;
     color: black;
 }
+
+/* Анимация для открытия и закрытия списков */
+.collapsible-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease-out;
+}
+
+.collapsible-content.expanded {
+    max-height: 1000px; /* Достаточно большое значение для вместимости содержимого */
+    transition: max-height 0.5s ease-in;
+}
+
+.collapsible-content.collapsed {
+    max-height: 0;
+    transition: max-height 0.5s ease-out;
+}
