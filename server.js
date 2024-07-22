@@ -1,4 +1,3 @@
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -8,6 +7,8 @@ const https = require('https');
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
 const xlsx = require('xlsx');
+
+require('dotenv').config();
 
 console.log('PORT:', process.env.PORT);
 console.log('SSL_PORT:', process.env.SSL_PORT);
@@ -173,39 +174,29 @@ app.get('/api/stats', (req, res) => {
 
     const query = `
         SELECT
-            DATE(timestamp) as date,
-            test_name,
-            SUM(correct_answers + incorrect_answers) as totalAnswers,
-            SUM(correct_answers) as correctAnswers,
-            (SUM(correct_answers) * 100.0 / SUM(correct_answers + incorrect_answers)) as percentage
+            'DP' as category,
+            'Всего' as test_name,
+            COALESCE(SUM(correct_answers + incorrect_answers), 0) as totalAnswers,
+            COALESCE(SUM(correct_answers), 0) as correctAnswers,
+            COALESCE((SUM(correct_answers) * 100.0 / SUM(correct_answers + incorrect_answers)), 0) as percentage
         FROM test_results
-        WHERE username = ?
-        GROUP BY DATE(timestamp), test_name
+        WHERE username = ? AND test_name LIKE 'DP%'
         UNION ALL
         SELECT
-            'Всего' as date,
-            test_name,
-            SUM(correct_answers + incorrect_answers) as totalAnswers,
-            SUM(correct_answers) as correctAnswers,
-            (SUM(correct_answers) * 100.0 / SUM(correct_answers + incorrect_answers)) as percentage
+            'EQ' as category,
+            'Всего' as test_name,
+            COALESCE(SUM(correct_answers + incorrect_answers), 0) as totalAnswers,
+            COALESCE(SUM(correct_answers), 0) as correctAnswers,
+            COALESCE((SUM(correct_answers) * 100.0 / SUM(correct_answers + incorrect_answers)), 0) as percentage
         FROM test_results
-        WHERE username = ?
-        GROUP BY test_name`;
+        WHERE username = ? AND test_name LIKE 'EQ%'
+    `;
 
     db.all(query, [username, username], (err, rows) => {
         if (err) {
             console.error('Failed to get stats:', err);
             return res.status(500).json({ success: false, message: 'Failed to get stats' });
         }
-
-        // Обработка данных для изменения имен тестов
-        rows.forEach(row => {
-            if (row.test_name === 'testDIAP') {
-                row.test_name = 'DP';
-            } else if (row.test_name === 'testEQ') {
-                row.test_name = 'EQ';
-            }
-        });
 
         res.json({
             success: true,
@@ -214,6 +205,61 @@ app.get('/api/stats', (req, res) => {
     });
 });
 
+// Конечная точка для получения статистики EQ
+app.get('/api/stats/eq', (req, res) => {
+    const username = req.query.username;
+
+    const query = `
+        SELECT
+            test_name,
+            SUM(correct_answers + incorrect_answers) as totalAnswers,
+            SUM(correct_answers) as correctAnswers,
+            (SUM(correct_answers) * 100.0 / SUM(correct_answers + incorrect_answers)) as percentage
+        FROM test_results
+        WHERE username = ? AND test_name LIKE 'EQ%'
+        GROUP BY test_name
+    `;
+
+    db.all(query, [username], (err, rows) => {
+        if (err) {
+            console.error('Не удалось получить statsEQ:', err);
+            return res.status(500).json({ success: false, message: 'Не удалось получить statsEQ' });
+        }
+
+        res.json({
+            success: true,
+            stats: rows
+        });
+    });
+});
+
+// Конечная точка для получения статистики DP
+app.get('/api/stats/dp', (req, res) => {
+    const username = req.query.username;
+
+    const query = `
+        SELECT
+            test_name,
+            SUM(correct_answers + incorrect_answers) as totalAnswers,
+            SUM(correct_answers) as correctAnswers,
+            (SUM(correct_answers) * 100.0 / SUM(correct_answers + incorrect_answers)) as percentage
+        FROM test_results
+        WHERE username = ? AND test_name LIKE 'DP%'
+        GROUP BY test_name
+    `;
+
+    db.all(query, [username], (err, rows) => {
+        if (err) {
+            console.error('Не удалось получить statsDP:', err);
+            return res.status(500).json({ success: false, message: 'Не удалось получить statsDP' });
+        }
+
+        res.json({
+            success: true,
+            stats: rows
+        });
+    });
+});
 
 app.post('/api/check-or-create-test', (req, res) => {
     const { username, testType } = req.body;
@@ -283,6 +329,34 @@ app.post('/api/update-test-record', (req, res) => {
     });
 });
 
+app.get('/api/stats/details', (req, res) => {
+    const { username, testName } = req.query;
+
+    const query = `
+        SELECT
+            DATE(timestamp) as date,
+            test_name,
+            SUM(correct_answers + incorrect_answers) as totalAnswers,
+            SUM(correct_answers) as correctAnswers,
+            (SUM(correct_answers) * 100.0 / SUM(correct_answers + incorrect_answers)) as percentage
+        FROM test_results
+        WHERE username = ? AND test_name = ?
+        GROUP BY DATE(timestamp), test_name
+    `;
+
+    db.all(query, [username, testName], (err, rows) => {
+        if (err) {
+            console.error('Failed to get detailed stats:', err);
+            return res.status(500).json({ success: false, message: 'Failed to get detailed stats' });
+        }
+
+        res.json({
+            success: true,
+            stats: rows
+        });
+    });
+});
+
 if (useSsl) {
     const options = {
         key: fs.readFileSync(process.env.SSL_KEY_PATH),
@@ -296,4 +370,4 @@ if (useSsl) {
     http.createServer(app).listen(port, () => {
         console.log(`HTTP Server running at http://localhost:${port}`);
     });
-}
+};
