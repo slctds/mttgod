@@ -2,5 +2,6 @@
 !.gitignore
 !index.html
 !server.js
+!public/
 !public/styles.css
 !public/script.js
