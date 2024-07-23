@@ -8,7 +8,7 @@
 </head>
 <body>
     <div class="container" id="main-menu">
-        <div class="welcome-message">Добро пожаловать!</div>
+        <div class="welcome-message">Добро пожаловать! Здесь будет красивое описание того, что этот ресурс содержит множество полезных покерных тестов, с помощью которых можно ускорить принятие правильных решений во время игры.</div>
         <div class="button-container">
             <button class="app-button" onclick="navigateTo('ranges')">Диапазоны</button>
             <button class="app-button" onclick="navigateTo('equity')">Эквити</button>
@@ -20,7 +20,7 @@
     </div>
 
     <div class="container" id="ranges-menu" style="display: none;">
-        <div class="welcome-message">Диапазоны</div>
+        <div class="welcome-message">Диапазоны. Загружены диапазоны открытия в эффективных 50bb стеках на основе GTQ-Wizard</div>
         <div class="button-container">
             <button class="app-button" onclick="navigateTo('study')">Изучить</button>
             <button class="app-button" onclick="navigateTo('test')">Тест</button>
@@ -29,7 +29,7 @@
     </div>
 
     <div class="container" id="study-menu" style="display: none;">
-        <div class="welcome-message">Изучить</div>
+        <div class="welcome-message">Изучить. Два типа диапазонов. Основное наполнение и разница между двумя соседними. Можно потыкать, посмотреть наполнение, картинки свайпаются вправо-влево. Открываются и закрываются по тапу.</div>
         <div class="button-container">
             <button class="app-button" onclick="navigateTo('basic')">Основные</button>
             <button class="app-button" onclick="navigateTo('boundaries')">Границы</button>
@@ -38,29 +38,29 @@
     </div>
 
     <div class="container" id="basic-menu" style="display: none;">
-        <div class="study-instruction">Нажмите на кнопку диапазона, чтобы посмотреть его</div>
+        <div class="study-instruction">Нажмите на кнопку диапазона, чтобы посмотреть его. Нажмите второй раз, чтобы закрыть картинку. Свайпы вправо-влево для перехода к следующему.</div>
         <div class="button-grid" id="basic-grid"></div>
         <button class="app-button back-button" onclick="navigateTo('study')">Назад</button>
     </div>
 
     <div class="container" id="boundaries-menu" style="display: none;">
-        <div class="study-instruction">Нажмите на кнопку диапазона, чтобы посмотреть его</div>
+        <div class="study-instruction">Нажмите на кнопку диапазона, чтобы посмотреть его. Нажмите второй раз, чтобы закрыть. Свайпы вправо-влево для перехода к следующей-предыдущей картинке.</div>
         <div class="button-grid" id="boundaries-grid"></div>
         <button class="app-button back-button" onclick="navigateTo('study')">Назад</button>
     </div>
 
     <div class="container" id="test-menu" style="display: none;">
-        <div class="welcome-message">Тесты</div>
+        <div class="welcome-message">Тесты. По картинке - определить диапазон, по картинке. По числу - определить диапазон по числу. По рукам - определить в какой диапазон входит конкретная рука.</div>
         <div class="button-container">
             <button class="app-button" onclick="navigateTo('testByImage')">По картинке</button>
-            <button class="app-button" onclick="navigateTo('testByNumber')">По числу</button>
+            <button class="app-button disabled-button no-function-button">По числу</button>
             <button class="app-button disabled-button no-function-button">По рукам</button>
             <button class="app-button" onclick="navigateTo('ranges')">Назад</button>
         </div>
     </div>
 
     <div class="container" id="test-by-image-menu" style="display: none;">
-        <div class="welcome-message">Начинаем тест. Выберите, с какими диапазонами будем работать?</div>
+        <div class="welcome-message">Начинаем тест. Выберите, с какими диапазонами будем работать? Можно выбрать для теста только основные, только границы, или все вместе</div>
         <div class="switch-container">
             <span class="switch-label">Основные</span>
             <label class="switch">
@@ -89,7 +89,7 @@
     </div>
 
     <div class="container" id="equity-menu" style="display: none;">
-        <div class="welcome-message">Эквити</div>
+        <div class="welcome-message">Эквити. Тестируется знание эквити конкретной руки против диапазона префлоп. Двойное название - значение эквити против двух диапазонов.</div>
         <div class="button-container">
             <button class="app-button" onclick="navigateTo('equity-study')">Изучить</button>
             <button class="app-button" onclick="navigateTo('equity-test')">Тест</button>
@@ -98,7 +98,7 @@
     </div>
 
     <div class="container" id="equity-study-menu" style="display: none;">
-        <div class="welcome-message">Изучение Эквити</div>
+        <div class="welcome-message">Изучение Эквити. Можно открыть и посмотреть диаграммы со значением эквити против конкретных линейных диапазонов. Нажать, чтобы посмотреть, второй раз нажать, чтобы закрыть, свайпы вправо-влево - переход к следующей-предыдущей картинке.</div>
         <div class="button-grid" id="equity-grid"></div>
         <button class="app-button back-button" onclick="navigateTo('equity')">Назад</button>
     </div>
