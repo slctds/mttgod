@@ -7,6 +7,7 @@ const https = require('https');
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
 const xlsx = require('xlsx');
+const bodyParser = require('body-parser');
 
 require('dotenv').config();
 
@@ -22,9 +23,18 @@ const useSsl = process.env.USE_SSL === 'true';
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Пути к Excel-файлам
+const handsFilePath = path.join(__dirname, 'public', 'byhands', 'hands', 'hands2.xlsx');
+const procentFilePath = path.join(__dirname, 'public', 'byhands', 'hands', 'procent50.xlsx');
+
+// Указываем путь к единой базе данных
+const dbPath = path.join(__dirname, 'database.db');
 
 // Инициализация базы данных
-const db = new sqlite3.Database('./database.db', (err) => {
+const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Failed to connect to the database', err);
     } else {
@@ -51,12 +61,84 @@ const db = new sqlite3.Database('./database.db', (err) => {
             incorrect_answers INTEGER,
             timestamp TEXT
         )`);
+        db.run(`CREATE TABLE IF NOT EXISTS testhands (
+            id INTEGER PRIMARY KEY,
+            hand TEXT,
+            procent INTEGER,
+            wrong INTEGER DEFAULT 0
+        )`);
     }
 });
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+// Функция для проверки и заполнения таблицы testhands
+async function checkAndFillTestHandsTable() {
+    const db = new sqlite3.Database(dbPath);
+
+    // Проверка количества записей в таблице testhands
+    let handsCount = await new Promise((resolve, reject) => {
+        db.get(`SELECT COUNT(*) as count FROM testhands WHERE hand IS NOT NULL`, (err, row) => {
+            if (err) reject(err);
+            else resolve(row.count);
+        });
+    });
+
+    if (handsCount < 169) {
+        // Если количество записей меньше 169, очищаем и заполняем колонку hand
+        console.log("Заполнение колонки hand данными из hands2.xlsx");
+
+        const workbook = xlsx.readFile(handsFilePath);
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const handsData = xlsx.utils.sheet_to_json(sheet, { header: 1 }).flat();
+
+        await new Promise((resolve, reject) => {
+            db.serialize(() => {
+                db.run(`DELETE FROM testhands`); // Полностью очищаем таблицу
+                const insertStmt = db.prepare(`INSERT INTO testhands (hand) VALUES (?)`);
+                handsData.forEach((hand) => {
+                    insertStmt.run(hand);
+                });
+                insertStmt.finalize(resolve);
+            });
+        });
+
+        console.log("Колонка hand успешно заполнена");
+    }
+
+    // Проверка количества записей в колонке procent
+    let procentCount = await new Promise((resolve, reject) => {
+        db.get(`SELECT COUNT(*) as count FROM testhands WHERE procent IS NOT NULL`, (err, row) => {
+            if (err) reject(err);
+            else resolve(row.count);
+        });
+    });
+
+    if (procentCount < 169) {
+        // Если количество записей меньше 169, очищаем и заполняем колонку procent
+        console.log("Заполнение колонки procent данными из procent50.xlsx");
+
+        const workbook = xlsx.readFile(procentFilePath);
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const procentData = xlsx.utils.sheet_to_json(sheet, { header: 1 }).flat();
+
+        await new Promise((resolve, reject) => {
+            db.serialize(() => {
+                const updateStmt = db.prepare(`UPDATE testhands SET procent = ? WHERE id = ?`);
+                procentData.forEach((procent, index) => {
+                    updateStmt.run(procent, index + 1);
+                });
+                updateStmt.finalize(resolve);
+            });
+        });
+
+        console.log("Колонка procent успешно заполнена");
+    }
+
+    db.close();
+}
 
 app.get('/api/images', (req, res) => {
     const imagesDirectory = path.join(__dirname, 'public', '50bb');
@@ -190,9 +272,18 @@ app.get('/api/stats', (req, res) => {
             COALESCE((SUM(correct_answers) * 100.0 / SUM(correct_answers + incorrect_answers)), 0) as percentage
         FROM test_results
         WHERE username = ? AND test_name LIKE 'EQ%'
+        UNION ALL
+        SELECT
+            'HH' as category,
+            'Всего' as test_name,
+            COALESCE(SUM(correct_answers + incorrect_answers), 0) as totalAnswers,
+            COALESCE(SUM(correct_answers), 0) as correctAnswers,
+            COALESCE((SUM(correct_answers) * 100.0 / SUM(correct_answers + incorrect_answers)), 0) as percentage
+        FROM test_results
+        WHERE username = ? AND test_name LIKE 'HH%'
     `;
 
-    db.all(query, [username, username], (err, rows) => {
+    db.all(query, [username, username, username], (err, rows) => {
         if (err) {
             console.error('Failed to get stats:', err);
             return res.status(500).json({ success: false, message: 'Failed to get stats' });
@@ -204,6 +295,7 @@ app.get('/api/stats', (req, res) => {
         });
     });
 });
+
 
 // Конечная точка для получения статистики EQ
 app.get('/api/stats/eq', (req, res) => {
@@ -260,6 +352,37 @@ app.get('/api/stats/dp', (req, res) => {
         });
     });
 });
+
+// Конечная точка для получения статистики HH
+app.get('/api/stats/hh', (req, res) => {
+    const username = req.query.username;
+
+    const query = `
+        SELECT
+            'HH' as category,
+            SUM(correct_answers + incorrect_answers) as totalAnswers,
+            SUM(correct_answers) as correctAnswers,
+            (SUM(correct_answers) * 100.0 / SUM(correct_answers + incorrect_answers)) as percentage
+        FROM test_results
+        WHERE username = ? AND test_name LIKE 'HH%'
+    `;
+
+    db.get(query, [username], (err, row) => {
+        if (err) {
+            console.error('Не удалось получить statsHH:', err);
+            return res.status(500).json({ success: false, message: 'Не удалось получить statsHH' });
+        }
+
+        console.log('Data for HH:', row);
+
+        res.json({
+            success: true,
+            stats: row
+        });
+    });
+});
+
+
 
 app.post('/api/check-or-create-test', (req, res) => {
     const { username, testType } = req.body;
@@ -356,6 +479,116 @@ app.get('/api/stats/details', (req, res) => {
         });
     });
 });
+
+// Функция для получения данных hands и procent
+function fetchAllHandsAndProcent() {
+    return new Promise((resolve, reject) => {
+        const db = new sqlite3.Database(dbPath);
+        db.all(`SELECT hand, procent FROM testhands`, (err, rows) => {
+            db.close();
+            if (err) {
+                reject(err);
+            } else {
+                const hands = rows.map(row => row.hand);
+                const procentValues = rows.map(row => row.procent);
+                resolve({ hands, procentValues });
+            }
+        });
+    });
+}
+
+// Обновленный маршрут для начала теста "По рукам"
+app.post('/api/byhands/start-test', async (req, res) => {
+    console.log('Получен запрос на старт теста');
+    try {
+        // Проверка и заполнение таблицы testhands
+        await checkAndFillTestHandsTable();
+
+        // Запрос всех данных из таблицы testhands
+        const { hands, procentValues } = await fetchAllHandsAndProcent();
+
+        if (hands.length === 0) {
+            console.log('Нет доступных вопросов.');
+            return res.json({ success: false, message: 'Нет доступных вопросов.' });
+        }
+
+        const randomIndex = Math.floor(Math.random() * hands.length);
+        const hand = hands[randomIndex];
+        const correctValue = procentValues[randomIndex];
+
+        console.log('Выбранная рука и правильное значение:', hand, correctValue);
+
+        res.json({
+            success: true,
+            hand,
+            correctValue,
+            procentValues,
+            hands
+        });
+    } catch (error) {
+        console.error('Ошибка при получении hands и procent:', error);
+        res.json({ success: false });
+    }
+});
+
+app.post('/api/save-test-results', (req, res) => {
+    const { username, correct_answers, incorrect_answers, timestamp, test_name } = req.body;  // Проверка на корректные имена полей
+    const db = new sqlite3.Database(path.join(__dirname, 'database.db'));
+
+    db.run(
+        `INSERT INTO test_results (username, correct_answers, incorrect_answers, timestamp, test_name) VALUES (?, ?, ?, ?, ?)`,
+        [username, correct_answers, incorrect_answers, timestamp, test_name],  // Использование правильных полей
+        function (err) {
+            if (err) {
+                console.error('Ошибка при сохранении результатов теста:', err.message);
+                res.json({ success: false, message: 'Ошибка при сохранении результатов' });
+            } else {
+                console.log('Результаты теста успешно сохранены');
+                res.json({ success: true });
+            }
+        }
+    );
+
+    db.close();
+});
+
+
+
+// Новый маршрут для сохранения неверных ответов
+app.post('/api/byhands/save-incorrect-hands', async (req, res) => {
+    const incorrectAnswers = req.body.incorrectAnswers;
+
+    try {
+        for (const hand of incorrectAnswers) {
+            await new Promise((resolve, reject) => {
+                db.get(`SELECT wrong FROM testhands WHERE hand = ?`, [hand], (err, row) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        let newWrongValue = 1;
+                        if (row && row.wrong) {
+                            newWrongValue = row.wrong + 1;
+                        }
+
+                        db.run(`UPDATE testhands SET wrong = ? WHERE hand = ?`, [newWrongValue, hand], (updateErr) => {
+                            if (updateErr) {
+                                reject(updateErr);
+                            } else {
+                                resolve();
+                            }
+                        });
+                    }
+                });
+            });
+        }
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Ошибка при обновлении значений wrong:', err);
+        res.json({ success: false });
+    }
+});
+
 
 if (useSsl) {
     const options = {
