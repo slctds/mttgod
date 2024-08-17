@@ -1232,7 +1232,13 @@ function loadNextTestImage(imagesToUse) {
 
 function generatePossibleAnswers(correctAnswer, imagesToUse) {
     const answers = [correctAnswer];
-    const filteredImages = imagesToUse.map(file => file.split('.')[0]);
+    const correctAnswerLength = correctAnswer.length;
+
+    // Фильтруем изображения, чтобы получить только те, которые соответствуют длине правильного ответа
+    const filteredImages = imagesToUse
+        .map(file => file.split('.')[0])
+        .filter(answer => answer.length === correctAnswerLength);
+
     while (answers.length < 6) {
         const randomIndex = Math.floor(Math.random() * filteredImages.length);
         const randomAnswer = filteredImages[randomIndex];
@@ -1242,6 +1248,7 @@ function generatePossibleAnswers(correctAnswer, imagesToUse) {
     }
     return shuffleArray(answers);
 }
+
 
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
