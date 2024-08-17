@@ -92,6 +92,7 @@ body {
     text-decoration: none;
 }
 
+/* Стили для полей ввода в модальном окне */
 .modal-content input[type="text"], .modal-content input[type="password"] {
     width: calc(100% - 20px);
     padding: 10px;
@@ -101,6 +102,7 @@ body {
     box-sizing: border-box;
 }
 
+/* Стили для кнопок в модальном окне */
 .modal-content button {
     width: 100%;
     padding: 10px;
@@ -116,11 +118,47 @@ body {
     background-color: #45a049;
 }
 
-/* Стили для кнопок */
-.button-container, .button-grid {
-    display: grid;
+/* Стили для верхнего контейнера с кнопками */
+.button-container {
+    display: flex;
+    flex-direction: column; /* Направление на вертикальное */
+    align-items: center; /* Центрируем кнопки */
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 10px 0; /* Убираем внешние отступы, чтобы не увеличивать расстояние вокруг всего контейнера */
+}
+
+/* Стили для верхних кнопок */
+.button-container button {
+    margin: 5px 0; /* Вертикальные отступы между кнопками */
+    width: 100%; /* Кнопки занимают всю ширину контейнера */
+}
+
+
+/* Стили для текста описания */
+.welcome-message {
+    margin-top: 20px; /* Отступ сверху для текста */
+    padding: 0 10px;
+    max-width: 400px;
+    margin: 20px auto; /* Центрируем текст и добавляем отступы сверху и снизу */
+    text-align: center;
+}
+
+/* Стили для контейнера с нижними кнопками */
+.lower-buttons-container {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
     gap: 10px;
-    width: 90%;
+}
+
+.lower-buttons-container button {
+    width: 100%;
+    padding: 15px;
+    font-size: 16px;
 }
 
 /* Основной стиль для кнопок */
@@ -137,23 +175,25 @@ body {
     box-sizing: border-box;
 }
 
-/* Стиль для кнопок при наведении */
 .app-button:hover {
     background-color: #45a049;
 }
 
-/* Сетка для кнопок, 4 столбца */
+/* Стили для сетки с кнопками */
 .button-grid {
     display: grid;
-    grid-gap: 10px;
-    grid-template-columns: repeat(4, 1fr); /* 4 кнопки в ряду */
+    gap: 10px;
+    grid-template-columns: repeat(4, 1fr);
+    width: 90%;
+    max-width: 800px;
+    margin: 0 auto;
 }
 
-/* Стиль для кнопок диапазонов */
+/* Стили для кнопок диапазонов */
 .range-button, .study-button, .equity-button, .diap-answer-button {
     font-size: 12px;
     padding: 20px;
-    background-color: #ff7043; /* Оранжевый цвет */
+    background-color: #ff7043;
     color: white;
     border: none;
     cursor: pointer;
@@ -162,7 +202,6 @@ body {
     height: auto;
 }
 
-/* Стиль для кнопок диапазонов при наведении */
 .range-button:hover, .study-button:hover, .equity-button:hover, .diap-answer-button:hover {
     background-color: #ff5722;
 }
@@ -174,12 +213,12 @@ body {
     color: black;
 }
 
-/* Стиль для кнопки назад */
+/* Стили для кнопки назад */
 .back-button {
     margin-top: 20px;
 }
 
-/* Стиль для кнопки завершения */
+/* Стили для кнопки завершения */
 .end-button {
     margin-top: 20px;
 }
@@ -238,8 +277,8 @@ body {
 .switch {
     position: relative;
     display: inline-block;
-    width: 60px;
-    height: 34px;
+    width: 80px;
+    height: 45px;
 }
 
 .switch input {
@@ -263,10 +302,10 @@ body {
 .slider:before {
     position: absolute;
     content: "";
-    height: 26px;
-    width: 26px;
-    left: 4px;
-    bottom: 4px;
+    height: 39px;
+    width: 39px;
+    left: 6px;
+    bottom: 6px;
     background-color: white;
     transition: .4s;
     border-radius: 50%;
@@ -390,7 +429,7 @@ button.disabled {
 .equity-test-button {
     font-size: 16px;
     padding: 10px;
-    background-color: #8BC34A; /* Зеленый цвет */
+    background-color: #8BC34A;
     color: white;
     border: none;
     cursor: pointer;
@@ -407,7 +446,7 @@ button.disabled {
     font-size: 14px;
     padding: 10px;
     margin: 5px;
-    background-color: #2196F3; /* Синий цвет */
+    background-color: #2196F3;
     color: white;
     border: none;
     cursor: pointer;
@@ -422,7 +461,7 @@ button.disabled {
     font-size: 14px;
     padding: 10px;
     margin: 5px;
-    background-color: #2196F3; /* Синий цвет */
+    background-color: #2196F3;
     color: white;
     border: none;
     cursor: pointer;
@@ -478,7 +517,7 @@ button.disabled {
 }
 
 .collapsible-content.expanded {
-    max-height: 1000px; /* Достаточно большое значение для вместимости содержимого */
+    max-height: 1000px;
     transition: max-height 0.5s ease-in;
 }
 
@@ -486,3 +525,154 @@ button.disabled {
     max-height: 0;
     transition: max-height 0.5s ease-out;
 }
+
+/* Стили для строк с ответами */
+.answer-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+/* Стили для кнопок ответа */
+.app-buttonHH50 {
+    font-size: 18px;
+    padding: 30px 15px;
+    height: 80px;
+    border: none;
+    background-color: #ff7043;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    width: 40%;
+    text-align: center;
+}
+
+/* Стиль для правильного ответа */
+.app-buttonHH50.correct {
+    background-color: #4CAF50;
+}
+
+/* Стиль для неправильного ответа */
+.app-buttonHH50.incorrect {
+    background-color: #f44336;
+}
+
+/* Расположение кнопок в последней строке */
+.answer-row:nth-child(3) button {
+    flex: 1 0 calc(50% - 10px);
+}
+
+/* Стиль для правильного ответа */
+.correctHH50 {
+    background-color: #4CAF50 !important;
+    color: white;
+}
+
+/* Стиль для неправильного ответа */
+.incorrectHH50 {
+    background-color: #f44336 !important;
+    color: white;
+}
+
+/* Сетка для кнопок с ответами */
+.grid-containerHH50 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+}
+
+/* Стили для кнопок управления */
+.control-buttonsHH50 {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.control-buttonsHH50 .app-buttonHH50 {
+    width: 48%;
+    height: 60px;
+}
+
+/* Стили для кнопок ответа */
+.answer-buttonHH50 {
+    font-size: 18px;
+    padding: 30px 15px;
+    height: 80px;
+    border: none;
+    background-color: #aaa7a7;
+    color: rgb(17, 17, 17);
+    cursor: pointer;
+    transition: background-color 0.3s;
+    width: 90%;
+    text-align: center;
+}
+
+/* Контейнер для кнопок управления */
+#test-menuHH50 .app-button-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+}
+
+/* Стили для кнопок в контейнере управления */
+#test-menuHH50 .app-button-container .app-buttonHH50 {
+    flex: 1;
+    margin: 0 10px;
+    height: 60px;
+    background-color: #ff7043;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.range-select {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.range-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 300px;
+    margin-bottom: 15px;
+}
+
+.range-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-right: 15px;
+}
+
+.range-group:last-child {
+    margin-right: 0;
+}
+
+.label-text {
+    margin-bottom: 5px;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Общие стили для кнопок */
+button {
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+button.green {
+    background-color: #28a745;
+}
+
+button.grey {
+    background-color: #cccccc;
+    color: #666666;
+}
+

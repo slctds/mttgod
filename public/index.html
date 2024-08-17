@@ -54,7 +54,7 @@
         <div class="button-container">
             <button class="app-button" onclick="navigateTo('testByImage')">По картинке</button>
             <button class="app-button disabled-button no-function-button">По числу</button>
-            <button class="app-button disabled-button no-function-button">По рукам</button>
+            <button class="app-button" onclick="navigateTo('testByHands')">По рукам</button>
             <button class="app-button" onclick="navigateTo('ranges')">Назад</button>
         </div>
     </div>
@@ -84,7 +84,7 @@
             <img id="test-image" src="" alt="Тестовая картинка" />
             <div id="answer-buttons" class="answer-buttonsDiap"></div> <!-- Контейнер для кнопок-ответов диапазонов -->
             <div id="score">Правильных: 0 | Неправильных: 0</div>
-            <button class="app-button end-button" onclick="endTest()">Закончить</button>
+            <button class="app-button end-button" onclick="endTestDiap()">Закончить</button>
         </div>
     </div>
 
@@ -113,7 +113,7 @@
         <div id="test-question"></div>
         <div id="answer-buttons-equity" class="answer-buttonsEquity"></div>
         <div id="previous-question-info"></div> <!-- Добавленный контейнер для информации о предыдущем вопросе -->
-        <button class="app-button end-button" onclick="endTest()">Закончить</button>
+        <button class="app-button end-button" onclick="endEquityTest()">Закончить</button>
     </div>
     
     <div id="image-viewer-equity" style="display: none;">
@@ -164,6 +164,67 @@
         </div>
     </div>
 
+    <!-- Начало блока для теста HH50 -->
+    <div id="main-menuHH50" class="container" style="display: none;">
+        <h1>HH50 Тест</h1>
+        
+        <!-- Checkboxes for Range Selection -->
+        <div class="range-select">
+            <div class="range-row">
+                <div class="range-group">
+                    <span class="label-text">1-25</span>
+                    <label class="switch">
+                        <input type="checkbox" id="range-switch-1-25" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="range-group">
+                    <span class="label-text">26-50</span>
+                    <label class="switch">
+                        <input type="checkbox" id="range-switch-26-50" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="range-row">
+                <div class="range-group">
+                    <span class="label-text">51-75</span>
+                    <label class="switch">
+                        <input type="checkbox" id="range-switch-51-75">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="range-group">
+                    <span class="label-text">76-100</span>
+                    <label class="switch">
+                        <input type="checkbox" id="range-switch-76-100">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+          
+        
+        <button id="start-test-buttonHH50" class="app-buttonHH50">Начать тест</button>
+        <!-- Добавляем кнопку "Назад" -->
+        <button class="app-button back-button" onclick="navigateTo('test')">Назад</button>
+    </div>
+
+    <div id="test-menuHH50" class="container" style="display: none;">
+        <h2 id="questionHH50"></h2>
+        <div id="answersHH50" class="grid-containerHH50"></div>
+        <p id="correct-countHH50">Верно - 0 Неверно - 0</p>
+        <p id="last-question-infoHH50"></p>
+        <p id="incorrect-handsHH50">Ошибки:</p>
+        <div class="app-button-container">
+            <button id="end-test-buttonHH50" class="app-buttonHH50">Закончить тест</button>
+            <button id="retry-errors-buttonHH50" class="app-buttonHH50">Ошибки</button>
+        </div>
+    </div>
+    <div id="messageHH50" class="container" style="display: none;"></div>
+    <!-- Конец блока для теста HH50 -->
+
     <script src="script.js"></script>
+
 </body>
 </html>
